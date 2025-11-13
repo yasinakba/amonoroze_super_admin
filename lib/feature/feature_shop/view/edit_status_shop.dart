@@ -13,17 +13,21 @@ class EditStatusShop extends StatelessWidget {
     return GetBuilder<ShopController>(initState: (state) {
       Get.lazyPut(()=> ShopController());
     },builder: (controller) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CustomDropdown(list:controller.statuses, title:'وضعیت را اتخاب کنید'),
-          CustomTextField(hintText: 'دلیل خود را برای اتخاب وضعیت بنویسید', icon: null),
-          SizedBox(height: 5.h,),
-          CustomButton(text: 'ویرایش', onPressed: () {
-            // controller.editShopStatus(shopId)
-          },),
-        ],
+      return Container(
+        padding: EdgeInsetsDirectional.symmetric(horizontal: 5.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CustomDropdown(list:controller.statuses, title:'وضعیت را اتخاب کنید'),
+            SizedBox(height: 5.h,),
+            CustomTextField(hintText: 'دلیل خود را برای اتخاب وضعیت بنویسید', icon: null),
+            SizedBox(height: 5.h,),
+            CustomButton(text: 'ویرایش', onPressed: () {
+              // controller.editShopStatus(shopId)
+            },),
+          ],
+        ),
       );
     });
   }
