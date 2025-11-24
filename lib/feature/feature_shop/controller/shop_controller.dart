@@ -1,21 +1,51 @@
+import 'package:amonoroze_panel_admin/feature/feature_shop/entity/shop_entity.dart';
+import 'package:amonoroze_panel_admin/feature/feature_shop/view/widget/custom_dropdown.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../app_config/remote/http_handler.dart';
 import '../view/edit_status_shop.dart';
+import 'package:amonoroze_panel_admin/feature/feature_category/entity/category_entity.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ShopController extends GetxController{
-  final ApiService apiService = Get.put(ApiService());
+import '../../../app_config/constant/contstant.dart';
+import '../../feature_shop/view/widget/custom_button.dart';
+import '../../feature_upload/upload_controller.dart';
+import '../../widgets/text_field_global.dart';
+
+// class ShopController extends GetxController {
+//
+//   Future<Widget> showBottom(context) async {
+//     return await showModalBottomSheet(
+//       context: context,
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+//       ),
+//       isScrollControlled: true,
+//       builder: (BuildContext context) {
+//         return SizedBox(
+//           height: 200.h, // using screenutil
+//           child: EditStatusShop(),
+//         );
+//       },
+//     );
+//   }
+// }
+
+class ShopController extends GetxController {
+  final Dio dio = Dio();
   var isLoading = false.obs;
   var isPasswordHidden = true.obs;
   int selectedPageCount = 1;
-  int selectedLimit = 10;// default selected number
+  int selectedLimit = 10; // default selected number
   TextEditingController reasonController = TextEditingController();
 
   final List<int> numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  final List<int> limits = [10,15,20,30,40];
+  final List<int> limits = [10, 15, 20, 30, 40];
+
   // List of dropdown options
   final List<String> statuses = [
     "--",
@@ -25,129 +55,148 @@ class ShopController extends GetxController{
     "blocked",
   ];
   String selectedStatus = "--";
-  Future<Widget> showBottom(context)async{
-    return           await  showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return SizedBox(
-          height: 200.h, // using screenutil
-          child: EditStatusShop(),
-        );
-      },
-    );
-  }
 
   @override
-  void onClose() {
-    super.onClose();
+  void onInit() {
+    // TODO: implement onInit
+    super.onInit();
+    setToken();
+    fetchShop();
   }
-  Future<void> fetchShop() async {
-    isLoading.value = true;
 
-    try {
-      final response = await apiService.get(
-        "admin/all-shops?page=1&limit=20", // 👈 change to your real endpoint
-        query: {
-          'status':selectedStatus,
-          'page':selectedPageCount,
-          'limit':selectedLimit,
+  UploadController uploadController = Get.put(UploadController());
+  String? token = '';
+
+  List<ShopEntity> shops = [];
+
+  setToken() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    token = preferences.getString('token');
+  }
+
+  List<CategoryEntity> categories = [];
+
+  Future fetchShop() async {
+    if(selectedStatus == '--'){
+      showSnackBar(message: 'Please select status', status: 'Warning', isSucceed: false);
+    }
+    shops.clear();
+    final response = await dio.get(
+      '$baseUrl/admin/all-shops?status=$selectedStatus&page=$selectedPageCount&limit=$selectedLimit',
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+          "accept": "application/json",
         },
-      );
-
-      isLoading.value = false;
-
-      // 🔹 Handle success
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar("Success", "Login successful",
-            snackPosition: SnackPosition.BOTTOM);
-
-        // Example: Navigate to home screen
-        // Get.offAll(() => HomeScreen());
-
-      }
-      // 🔹 Handle API validation / auth error
-      else if (response.statusCode == 400 || response.statusCode == 401) {
-        Get.snackbar("Invalid Credentials",
-            response.bodyString ?? "Username or password is wrong",
-            snackPosition: SnackPosition.BOTTOM);
-      }
-      // 🔹 Handle server error
-      else if (response.statusCode == 500) {
-        Get.snackbar("Server Error", "Please try again later",
-            snackPosition: SnackPosition.BOTTOM);
-      }
-      // 🔹 Catch-all
-      else {
-        Get.snackbar("Error", response.statusText ?? "Unknown error",
-            snackPosition: SnackPosition.BOTTOM);
-      }
-    } catch (e) {
-      isLoading.value = false;
-      // 🔹 Handle network / timeout error
-      Get.snackbar("Network Error", "Check your internet connection",
-          snackPosition: SnackPosition.BOTTOM);
+      ),
+    );
+    if (response.statusCode == 200) {
+      List<dynamic> list = response.data['data'];
+      shops.addAll(list.map((item) => ShopEntity.fromJson(item)));
+      update();
     }
   }
 
-  Future<void> editShopStatus(shopId) async {
-    isLoading.value = true;
-    Map<String,dynamic> body = {
-      "reasons": {
-        "additionalProp1": "string",
-        "additionalProp2": "string",
-        "additionalProp3": "string"
+  Future<void> editShop(id) async {
+    // Validation
+    if (reasonController.text.isEmpty) {
+      showSnackBar(
+        message: 'Please fill all requirements',
+        status: 'Error',
+        isSucceed: false,
+      );
+      return;
+    }
+    try {
+      // Build form
+      Map<String, dynamic> formData = {
+        "reasons": {
+          "additionalProp1": "string",
+          "additionalProp2": "string",
+          "additionalProp3": "string",
+        },
+        "shop_id": "string",
+        "status": "waiting",
+        "status_reason": "string",
+      };
+
+      final response = await dio.patch(
+        "$baseUrl/admin/change-shop-status/$id",
+        data: formData,
+        options: Options(
+          validateStatus: (_) => true, // <--- NO THROW
+          headers: {
+            "Authorization": "Bearer $token",
+            "Content-Type": "application/json",
+            "accept": "application/json",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        reasonController.clear();
+        selectedStatus = '--';
+        fetchShop();
+        Get.back();
+
+        showSnackBar(
+          message: "Shop updated successfully",
+          status: "Success",
+          isSucceed: true,
+        );
+        return;
+      } else {
+        // Backend error but not a crash
+        showSnackBar(
+          message: "Server error: ${response.data}",
+          status: "Error",
+          isSucceed: false,
+        );
+      }
+    } catch (e, s) {
+      showSnackBar(
+        message: 'Encountered error: $e',
+        status: 'Error',
+        isSucceed: false,
+      );
+    }
+  }
+
+
+  Future<Widget> editBottomSheet({id, context}) async {
+    return await showModalBottomSheet(
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(5.w),
+          child: Column(
+            children: [
+              CustomDropdown(
+                list: statuses,
+                title: '--',
+                selected: selectedStatus,
+                onChanged: (value) {
+                  selectedStatus = value!;
+                  update();
+                },
+              ),
+              TextFiledGlobal(
+                type: TextInputType.text,
+                controller: reasonController,
+                hint: 'Title',
+                icon: null,
+                filteringTextInputFormatter:
+                    FilteringTextInputFormatter.singleLineFormatter,
+              ),
+              CustomButton(
+                text: 'Edit',
+                onPressed: () => (id),
+              ),
+            ],
+          ),
+        );
       },
-      "shop_id": shopId,
-      "status": selectedStatus,
-      "status_reason": reasonController.text,
-    };
-    try {
-      final response = await apiService.get(
-        "admin/all-shops?page=1&limit=20",
-        query: {
-          'status':selectedStatus,
-          'page':selectedPageCount,
-          'limit':selectedLimit,
-        },
-      );
-
-      isLoading.value = false;
-
-      // 🔹 Handle success
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar("Success", "Login successful",
-            snackPosition: SnackPosition.BOTTOM);
-
-        // Example: Navigate to home screen
-        // Get.offAll(() => HomeScreen());
-
-      }
-      // 🔹 Handle API validation / auth error
-      else if (response.statusCode == 400 || response.statusCode == 401) {
-        Get.snackbar("Invalid Credentials",
-            response.bodyString ?? "Username or password is wrong",
-            snackPosition: SnackPosition.BOTTOM);
-      }
-      // 🔹 Handle server error
-      else if (response.statusCode == 500) {
-        Get.snackbar("Server Error", "Please try again later",
-            snackPosition: SnackPosition.BOTTOM);
-      }
-      // 🔹 Catch-all
-      else {
-        Get.snackbar("Error", response.statusText ?? "Unknown error",
-            snackPosition: SnackPosition.BOTTOM);
-      }
-    } catch (e) {
-      isLoading.value = false;
-      // 🔹 Handle network / timeout error
-      Get.snackbar("Network Error", "Check your internet connection",
-          snackPosition: SnackPosition.BOTTOM);
-    }
+      context: context,
+    );
   }
-
 }

@@ -1,44 +1,74 @@
-import 'package:get/get.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class ApiService extends GetConnect {
-  final String baseUrl = "amonoroz.com/api/v1"; // replace with your real API
+class HttpHandler {
+  final String baseUrl;
+  final Map<String, String> defaultHeaders;
 
-  @override
-  void onInit() {
-    httpClient.baseUrl = baseUrl;
-    httpClient.timeout = const Duration(seconds: 10);
+  HttpHandler({
+    required this.baseUrl,
+    this.defaultHeaders = const {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  });
 
-    // Optional: add headers globally (e.g. JWT token)
-    // httpClient.addRequestModifier<dynamic>((request) {
-    //   request.headers['Authorization'] = "Bearer your_token_here";
-    //   return request;
-    // });
-
-    super.onInit();
+  /// ✅ GET request
+  Future<dynamic> get(String endpoint, {Map<String, String>? headers}) async {
+    final uri = Uri.parse('$baseUrl$endpoint');
+    final response = await http.get(uri, headers: {...defaultHeaders, ...?headers});
+    return _handleResponse(response);
   }
 
-  // 🔹 GET request
-  Future<Response> getRequest(String endpoint) async {
-    return await get(endpoint);
+  /// ✅ POST request
+  Future<dynamic> post(String endpoint, {Map<String, String>? headers, dynamic body}) async {
+    final uri = Uri.parse('$baseUrl$endpoint');
+    final response = await http.post(
+      uri,
+      headers: {...defaultHeaders, ...?headers},
+      body: jsonEncode(body),
+    );
+    return _handleResponse(response);
   }
 
-  // 🔹 POST request
-  Future<Response> postRequest(String endpoint, Map<String, dynamic> body) async {
-    return await post(endpoint, body);
+  /// ✅ PUT request
+  Future<dynamic> put(String endpoint, {Map<String, String>? headers, dynamic body}) async {
+    final uri = Uri.parse('$baseUrl$endpoint');
+    final response = await http.put(
+      uri,
+      headers: {...defaultHeaders, ...?headers},
+      body: jsonEncode(body),
+    );
+    return _handleResponse(response);
   }
 
-  // 🔹 PUT request
-  Future<Response> putRequest(String endpoint, Map<String, dynamic> body) async {
-    return await put(endpoint, body);
+  /// ✅ DELETE request
+  Future<dynamic> delete(String endpoint, {Map<String, String>? headers}) async {
+    final uri = Uri.parse('$baseUrl$endpoint');
+    final response = await http.delete(uri, headers: {...defaultHeaders, ...?headers});
+    return _handleResponse(response);
   }
 
-  // 🔹 PATCH request
-  Future<Response> patchRequest(String endpoint, Map<String, dynamic> body) async {
-    return await patch(endpoint, body);
-  }
-
-  // 🔹 DELETE request
-  Future<Response> deleteRequest(String endpoint) async {
-    return await delete(endpoint);
+  /// 🧩 Handle API response and errors
+  dynamic _handleResponse(http.Response response) {
+    switch (response.statusCode) {
+      case 200:
+      case 201:
+        return jsonDecode(response.body);
+      case 400:
+        throw Exception('Bad Request: ${response.body}');
+      case 401:
+        throw Exception('Unauthorized: ${response.body}');
+      case 403:
+        throw Exception('Forbidden: ${response.body}');
+      case 404:
+        throw Exception('Not Found: ${response.body}');
+      case 500:
+        throw Exception('Internal Server Error: ${response.body}');
+      default:
+        throw Exception('Unexpected error: ${response.statusCode}');
+    }
   }
 }
+
+

@@ -23,9 +23,7 @@ class EditStatusShop extends StatelessWidget {
             SizedBox(height: 5.h,),
             CustomTextField(hintText: 'دلیل خود را برای اتخاب وضعیت بنویسید', icon: null),
             SizedBox(height: 5.h,),
-            CustomButton(text: 'ویرایش', onPressed: () {
-              // controller.editShopStatus(shopId)
-            },),
+            CustomButton(text: 'ویرایش', onPressed: () {},),
           ],
         ),
       );
