@@ -5,7 +5,6 @@ import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/responsive.dart';
 import 'package:amonoroze_panel_admin/feature/feature_upload/upload_controller.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -20,8 +19,8 @@ class CircleAvatarGlobal extends StatelessWidget {
       },
       builder: (logic) {
         return SizedBox(
-          height: isMobile ? 80.w : 30.w,
-          width: isMobile ? 80.w : 30.w,
+          height: isMobile ? 80.w : 25.w,
+          width: isMobile ? 80.w : 25.w,
           child: Stack(
             alignment: Alignment.bottomLeft,
             children: [
@@ -38,8 +37,11 @@ class CircleAvatarGlobal extends StatelessWidget {
                         )
                       : kIsWeb
                       ? Image.network(logic.webImageUrl!, fit: BoxFit.cover)
-                      : Image.file(
+                      : logic.imageName == ''? Image.file(
                           File(logic.pickedFile!.path),
+                          fit: BoxFit.cover,
+                        ): Image.network(
+                          "$baseImageUrl/${logic.imageName}",
                           fit: BoxFit.cover,
                         ),
                 ),

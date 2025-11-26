@@ -20,7 +20,6 @@ class HomeController extends GetxController {
       onTap: () {
         body = widget;
         this.appBar = appBar;
-        Get.back();
         update();
       },
       onFocusChange: (value) => true,

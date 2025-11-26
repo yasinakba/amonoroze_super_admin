@@ -1,9 +1,13 @@
 import 'package:amonoroze_panel_admin/app_config/constant/responsive.dart';
+import 'package:amonoroze_panel_admin/feature/feature_admin_stories/view/admin_stories_screen.dart';
+import 'package:amonoroze_panel_admin/feature/feature_auth_sentences/view/auth_sentence_screen.dart';
 import 'package:amonoroze_panel_admin/feature/feature_banner/view/banner_screen.dart';
+import 'package:amonoroze_panel_admin/feature/feature_brand/view/brand_screen.dart';
 import 'package:amonoroze_panel_admin/feature/feature_category/view/category_screen.dart';
 import 'package:amonoroze_panel_admin/feature/feature_home/controller/home_controller.dart';
 import 'package:amonoroze_panel_admin/feature/feature_home/widget/first_view.dart';
 import 'package:amonoroze_panel_admin/feature/feature_shop/view/shop_screen.dart';
+import 'package:amonoroze_panel_admin/feature/feature_specification/view/specification_screen.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -36,6 +40,18 @@ class HomeScreen extends StatelessWidget {
               controller.listTile(widget: ShopScreen(),
                   title: 'Shops',
                   icon: Icons.store, appBar: AppBar(backgroundColor: Colors.white,)),
+              controller.listTile(widget: SpecificationScreen(),
+                  title: 'Specification',
+                  icon: Icons.more_horiz_outlined, appBar: specificationAppBar),
+              controller.listTile(widget: AdminStoriesScreeen(),
+                  title: 'AdminStories',
+                  icon: Icons.storefront_outlined, appBar: adminStoreAppBar),
+              controller.listTile(widget: AuthSentenceScreen(),
+                  title: 'Sentences',
+                  icon: Icons.text_decrease, appBar: authSentenceAppBar(context)),
+              controller.listTile(widget: BrandScreen(),
+                  title: 'Brand',
+                  icon: Icons.branding_watermark, appBar: brandAppBar(context: context)),
             ]),
 
           )

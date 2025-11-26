@@ -1,5 +1,6 @@
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/responsive.dart';
+import 'package:amonoroze_panel_admin/feature/feature_brand/entity/brand_entity.dart';
 import 'package:amonoroze_panel_admin/feature/feature_shop/view/widget/custom_button.dart';
 import 'package:amonoroze_panel_admin/feature/feature_upload/upload_controller.dart';
 import 'package:amonoroze_panel_admin/feature/widgets/button_global.dart';
@@ -32,7 +33,8 @@ class BrandController extends GetxController{
     token = preferences.getString('token');
   }
 
-  List<Brand> brands = [];
+  bool notFound = false;
+  List<BrandEntity> brands = [];
 
   Future fetchBrand() async {
     brands.clear();
@@ -48,6 +50,7 @@ class BrandController extends GetxController{
     if (response.statusCode == 200) {
       List<dynamic> list = response.data['data'];
       brands.addAll(list.map((item) => BrandEntity.fromJson(item)));
+      notFound = brands.isEmpty;
       update();
     }
   }
@@ -61,9 +64,9 @@ class BrandController extends GetxController{
     try {
       // Build form
       Map<String, dynamic> formData = {
-          "description": "string",
-          "logo": "string",
-          "name": "string"
+          "description": descController.text,
+          "logo": uploadController.selectedImage,
+          "name": nameController.text,
       };
 
       final response = await dio.put(
@@ -96,22 +99,42 @@ class BrandController extends GetxController{
   }
 
 
-  Future<void> deleteBrand({id, context,index}) async {
+  Future<void> deleteBrand({id, index}) async {
+    try {
+      final response = await dio.delete(
+        '$baseUrl/admin/brands/$id',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'accept': 'application/json',
+          },
+        ),
+      );
 
-    final response = await dio.delete(
-      '$baseUrl/admin/brands/$id',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'accept': 'application/json',
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      brands.removeAt(index);
-      update();
+      if (response.statusCode == 200) {
+        brands.removeAt(index);
+        update();
+        showSnackBar(
+          message: "Brand deleted successfully",
+          status: "Success",
+          isSucceed: true,
+        );
+      } else {
+        showSnackBar(
+          message: "Failed to delete brand. Status: ${response.statusCode}",
+          status: "Error",
+          isSucceed: false,
+        );
+      }
+    } catch (e) {
+      showSnackBar(
+        message: "Error deleting brand: $e",
+        status: "Error",
+        isSucceed: false,
+      );
     }
   }
+
   final Dio dio = Dio();
 
   Future<void> createBrand() async {
@@ -132,7 +155,7 @@ class BrandController extends GetxController{
         "$baseUrl/admin/brands",
         data: {
           "description": descController.text,
-          "logo": "string",
+          "logo": uploadController.selectedImage,
           "name": nameController.text
         },
         options: Options(

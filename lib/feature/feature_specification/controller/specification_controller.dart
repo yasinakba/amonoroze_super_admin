@@ -1,3 +1,4 @@
+import 'package:amonoroze_panel_admin/feature/feature_specification/entity/specification_entity.dart' hide Options;
 import 'package:get/get.dart';
 import 'package:amonoroze_panel_admin/feature/feature_category/entity/category_entity.dart';
 import 'package:dio/dio.dart';
@@ -20,8 +21,8 @@ class SpecificationController extends GetxController {
   void onInit() {
     // TODO: implement onInit
     super.onInit();
-    fetchSpecifications();
     setToken();
+    fetchSpecifications();
   }
 
   UploadController uploadController = Get.put(UploadController());
@@ -33,9 +34,12 @@ class SpecificationController extends GetxController {
     token = preferences.getString('token');
   }
 
-  List<CategoryEntity> specification = [];
+  List<SpecificationEntity> specification = [];
 
   Future fetchSpecifications() async {
+    if(token==''){
+      await setToken();
+    }
     specification.clear();
     final response = await dio.get(
       '$baseUrl/admin/specifications',
@@ -48,7 +52,7 @@ class SpecificationController extends GetxController {
     );
     if (response.statusCode == 200) {
       List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => CategoryEntity.fromJson(item)));
+      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
       update();
     }
   }
@@ -66,7 +70,7 @@ class SpecificationController extends GetxController {
     );
     if (response.statusCode == 200) {
       List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => CategoryEntity.fromJson(item)));
+      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
       update();
     }
   }
@@ -84,7 +88,7 @@ class SpecificationController extends GetxController {
     );
     if (response.statusCode == 200) {
       List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => CategoryEntity.fromJson(item)));
+      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
       update();
     }
   }
@@ -102,7 +106,7 @@ class SpecificationController extends GetxController {
     );
     if (response.statusCode == 200) {
       List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => CategoryEntity.fromJson(item)));
+      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
       update();
     }
   }
@@ -121,7 +125,7 @@ class SpecificationController extends GetxController {
     );
     if (response.statusCode == 200) {
       List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => CategoryEntity.fromJson(item)));
+      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
       update();
     }
   }
@@ -189,7 +193,7 @@ class SpecificationController extends GetxController {
     }
   }
 
-  Future<void> deleteSpecification(id) async {
+  Future<void> deleteSpecification({id}) async {
     try {
       // --- Validation ---
 
@@ -253,15 +257,14 @@ class SpecificationController extends GetxController {
           width: isDesktop ? 120.w : 300.w,
           child: Column(
             children: [
-              CircleAvatarGlobal(),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: tex,
-                hint: 'Enter title',
-                icon: Icons.text_fields,
-                filteringTextInputFormatter:
-                    FilteringTextInputFormatter.singleLineFormatter,
-              ),
+              // TextFiledGlobal(
+              //   type: TextInputType.text,
+              //   controller: ,
+              //   hint: 'Enter title',
+              //   icon: Icons.text_fields,
+              //   filteringTextInputFormatter:
+              //       FilteringTextInputFormatter.singleLineFormatter,
+              // ),
               ButtonGlobal(
                 onTap: () => createSpecification(),
                 title: 'Add ParentCategory',
@@ -280,15 +283,14 @@ class SpecificationController extends GetxController {
           padding: EdgeInsets.all(5.w),
           child: Column(
             children: [
-              CircleAvatarGlobal(),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: titleController,
-                hint: 'Enter title',
-                icon: null,
-                filteringTextInputFormatter:
-                    FilteringTextInputFormatter.singleLineFormatter,
-              ),
+              // TextFiledGlobal(
+              //   type: TextInputType.text,
+              //   controller: titleController,
+              //   hint: 'Enter title',
+              //   icon: null,
+              //   filteringTextInputFormatter:
+              //       FilteringTextInputFormatter.singleLineFormatter,
+              // ),
               CustomButton(
                 text: 'Edit',
                 onPressed: () => editSpecifications(id: id),

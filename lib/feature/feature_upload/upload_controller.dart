@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class UploadController extends GetxController{
   String selectedImage = 'usericon.png';
   Uint8List? webImageBytes ;
+  String imageName = '';
   String? webImageUrl;
   final String uploadUrl = "$baseUrl/admin/upload-image";
   XFile? pickedFile;
@@ -69,7 +70,7 @@ class UploadController extends GetxController{
     if (response.statusCode == 200) {
       var responseBody = await response.stream.bytesToString();
       var data = jsonDecode(responseBody);
-      selectedImage = data['data'];
+      selectedImage = data['data']['object_name'];
       update();
     } else {
       showSnackBar(message: "Error", status: "Upload failed: ${response.statusCode}", isSucceed: false);

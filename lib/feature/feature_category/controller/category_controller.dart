@@ -71,6 +71,7 @@ class CategoryController extends GetxController{
           validateStatus: (_) => true, // <--- NO THROW
           headers: {
             'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
             'accept': 'application/json',
           },
         ),
@@ -111,6 +112,7 @@ class CategoryController extends GetxController{
           headers: {
             'Authorization': 'Bearer $token',
             'accept': 'application/json',
+            'Content-Type': 'application/json',
           },
         ),
       );
@@ -119,7 +121,9 @@ class CategoryController extends GetxController{
         titleController.clear();
         fetchCategory();
         Get.back();
+        update();
         showSnackBar(message: "Category updated successfully", status: "Success", isSucceed: true);
+
         return;
       } else {
         // Backend error but not a crash
@@ -131,22 +135,41 @@ class CategoryController extends GetxController{
   }
 
 
-  Future<void> deleteCategory({id, context,index}) async {
-
-    final response = await dio.delete(
-      '$baseUrl/admin/categories/$id',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'accept': 'application/json',
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      categories.removeAt(index);
-      update();
+  Future<void> deleteCategory({id, context, index}) async {
+    try {
+      final response = await dio.delete(
+        '$baseUrl/admin/categories/$id',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'accept': 'application/json',
+          },
+        ),
+      );
+      if (response.statusCode == 204) {
+        categories.removeAt(index);
+        update();
+        showSnackBar(
+          message: "Category deleted successfully",
+          status: "Success",
+          isSucceed: true,
+        );
+      } else {
+        showSnackBar(
+          message: "Failed to delete category. Status: ${response.statusCode}",
+          status: "Error",
+          isSucceed: false,
+        );
+      }
+    } catch (e) {
+      showSnackBar(
+        message: "Error deleting category: $e",
+        status: "Error",
+        isSucceed: false,
+      );
     }
   }
+
   final Dio dio = Dio();
   TextEditingController titleController = TextEditingController();
 

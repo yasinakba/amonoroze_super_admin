@@ -62,8 +62,6 @@ class ShopScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-
-                                  // Banner Title + Details
                                   Padding(
                                     padding: const EdgeInsets.all(12),
                                     child: Text(

@@ -1,6 +1,7 @@
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/feature/feature_banner/controller/banner_controller.dart';
 import 'package:amonoroze_panel_admin/feature/feature_banner/entity/banner_entity.dart';
+
 import 'package:amonoroze_panel_admin/feature/widgets/button_global.dart';
 import 'package:amonoroze_panel_admin/feature/widgets/text_field_global.dart';
 import 'package:flutter/material.dart';
@@ -17,9 +18,11 @@ class BannerScreen extends StatelessWidget {
       },
       builder: (controller) {
      return Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
-                child: ListView.builder(
+                child:controller.notFound? ListView.builder(
                   itemCount: controller.banners.length,
                   itemBuilder: (context, index) {
                     BannerEntity banner = controller.banners[index];
@@ -76,6 +79,9 @@ class BannerScreen extends StatelessWidget {
                                 children: [
                                   Spacer(),
                                   Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
+                                    controller.titleController.text = banner.title??'';
+                                    controller.editingLevelController.text = banner.level.toString();
+                                    controller.uploadController.imageName = banner.image??'';
                                     controller.editBottomSheet(id:banner.id,context: context);
                                   }, icon: Icon(Icons.edit,color: Colors.green,)),),
                                   Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
@@ -89,7 +95,7 @@ class BannerScreen extends StatelessWidget {
                       ],
                     );
                   },
-                ),
+                ):Center(child: Text(textAlign: TextAlign.center,'NotFound',style: styleText,)),
               ),
             ],
           );
@@ -99,7 +105,7 @@ class BannerScreen extends StatelessWidget {
 }
 
 AppBar bannerAppBar(context) {
-  return AppBar(
+  return AppBar(backgroundColor: Colors.white,
     title: GetBuilder<BannerController>(
       builder: (controller) {
         return Row(
@@ -124,9 +130,10 @@ AppBar bannerAppBar(context) {
             Spacer(),
             IconButton(
               onPressed: () {
+               controller.clearController();
                 controller.showBottomSheetForCreate(context);
               },
-              icon: Icon(Icons.add_circle, color: Colors.redAccent.shade700),
+              icon: Icon(Icons.add_circle, color: Colors.green.shade700),
             ),
           ],
         );

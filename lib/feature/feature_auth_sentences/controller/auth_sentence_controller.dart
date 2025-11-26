@@ -2,7 +2,6 @@ import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/responsive.dart';
 import 'package:amonoroze_panel_admin/feature/feature_auth_sentences/entity/sentence_entity.dart';
 import 'package:amonoroze_panel_admin/feature/feature_upload/upload_controller.dart';
-import 'package:amonoroze_panel_admin/feature/widgets/circle_avatar_global.dart';
 import 'package:amonoroze_panel_admin/feature/widgets/text_field_global.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +22,7 @@ class AuthSentenceController extends GetxController {
     fetchAuthSentences();
   }
   TextEditingController nameController = TextEditingController();
-  TextEditingController textContoller = TextEditingController();
+  TextEditingController textController = TextEditingController();
   UploadController uploadController = Get.put(UploadController());
   List<SentenceEntity> sentences = [];
   final dio = Dio();
@@ -36,36 +35,54 @@ class AuthSentenceController extends GetxController {
 
   Future fetchAuthSentences() async {
     sentences.clear();
-    final response = await dio.get(
-      '$baseUrl/admin/sentences',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'accept': 'application/json',
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      List<dynamic> list = response.data['data'];
-      sentences.addAll(list.map((item) => SentenceEntity.fromJson(item)));
-      update();
+    try {
+      if(token == ''){
+        await setToken();
+      }
+      final response = await dio.get('$baseUrl/admin/sentences',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'accept': 'application/json',
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        List<dynamic> list = response.data['data'];
+        sentences.addAll(list.map((item) => SentenceEntity.fromJson(item)));
+        update();
+      } else {
+        showSnackBar(
+          message: "Failed to fetch sentences. Status: ${response.statusCode}",
+          status: "Error",
+          isSucceed: false,
+        );
+      }
+    } catch (e) {
+      showSnackBar(
+        message: "Error fetching sentences: $e",
+        status: "Error",
+        isSucceed: false,
+      );
     }
   }
 
+
   Future<void> editSentence({id}) async {
     // Validation
-    if (textContoller.text.isEmpty || token == '') {
+    if (textController.text.isEmpty || token == '') {
       showSnackBar(message: 'Please fill all requirements', status: 'Error', isSucceed: false);
       return;
     }
     try {
       // Build form
       Map<String, dynamic> formData = {
-        'text':textContoller.text,
+        'text':textController.text,
+        'id':id,
       };
 
       final response = await dio.put(
-        "$baseUrl/admin/sentences/$id",
+        "$baseUrl/admin/sentences",
         data: formData,
         options: Options(
           validateStatus: (_) => true, // <--- NO THROW
@@ -78,7 +95,7 @@ class AuthSentenceController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        textContoller.clear();
+        textController.clear();
         nameController.clear();
         fetchAuthSentences();
         Get.back();
@@ -94,29 +111,45 @@ class AuthSentenceController extends GetxController {
   }
 
 
-  Future<void> deleteSentence({id,index}) async {
-
-    final response = await dio.delete(
-      '$baseUrl/admin/sentences/$id',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'accept': 'application/json',
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      sentences.removeAt(index);
-      update();
+  Future<void> deleteSentence({id, index}) async {
+    try {
+      final response = await dio.delete(
+        '$baseUrl/admin/sentences/$id',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'accept': 'application/json',
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        sentences.removeAt(index);
+        update();
+        showSnackBar(
+          message: "Sentence deleted successfully",
+          status: "Success",
+          isSucceed: true,
+        );
+      } else {
+        showSnackBar(
+          message: "Failed to delete sentence. Status: ${response.statusCode}",
+          status: "Error",
+          isSucceed: false,
+        );
+      }
+    } catch (e) {
+      showSnackBar(
+        message: "Error deleting sentence: $e",
+        status: "Error",
+        isSucceed: false,
+      );
     }
   }
 
 
   Future<void> createSentence() async {
     try {
-      // --- Validation ---
-
-      if (nameController.text.isEmpty || uploadController.selectedImage.isEmpty || token == ''||textContoller.text.isEmpty) {
+      if (uploadController.selectedImage.isEmpty || token == ''||textController.text.isEmpty) {
         showSnackBar(
           status: "Error",
           message: "Please fill all required fields",
@@ -129,13 +162,13 @@ class AuthSentenceController extends GetxController {
       final response = await dio.post(
         "$baseUrl/admin/sentences",
         data: {
-          "text": textContoller.text,
+          "text": textController.text,
         },
         options: Options(
           headers: {
-            "Authorization": "Bearer $token",
-            "Content-Type": "application/json",
-            "accept": "application/json",
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
           },
         ),
       );
@@ -182,7 +215,7 @@ class AuthSentenceController extends GetxController {
             children: [
               TextFiledGlobal(
                 type: TextInputType.text,
-                controller: textContoller,
+                controller: textController,
                 hint: 'Enter Description',
                 icon: Icons.text_fields,
                 filteringTextInputFormatter:
@@ -205,7 +238,7 @@ class AuthSentenceController extends GetxController {
             children: [
               TextFiledGlobal(
                 type: TextInputType.text,
-                controller: textContoller,
+                controller: textController,
                 hint: 'Enter Description',
                 icon: null,
                 filteringTextInputFormatter:

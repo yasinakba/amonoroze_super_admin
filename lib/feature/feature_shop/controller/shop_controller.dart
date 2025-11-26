@@ -16,25 +16,6 @@ import '../../feature_shop/view/widget/custom_button.dart';
 import '../../feature_upload/upload_controller.dart';
 import '../../widgets/text_field_global.dart';
 
-// class ShopController extends GetxController {
-//
-//   Future<Widget> showBottom(context) async {
-//     return await showModalBottomSheet(
-//       context: context,
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-//       ),
-//       isScrollControlled: true,
-//       builder: (BuildContext context) {
-//         return SizedBox(
-//           height: 200.h, // using screenutil
-//           child: EditStatusShop(),
-//         );
-//       },
-//     );
-//   }
-// }
-
 class ShopController extends GetxController {
   final Dio dio = Dio();
   var isLoading = false.obs;
@@ -72,31 +53,56 @@ class ShopController extends GetxController {
   setToken() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     token = preferences.getString('token');
+    fetchShop();
   }
 
   List<CategoryEntity> categories = [];
 
   Future fetchShop() async {
-    if(selectedStatus == '--'){
-      showSnackBar(message: 'Please select status', status: 'Warning', isSucceed: false);
+    if (token == '') {
+      await setToken();
     }
     shops.clear();
-    final response = await dio.get(
-      '$baseUrl/admin/all-shops?status=$selectedStatus&page=$selectedPageCount&limit=$selectedLimit',
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-          "accept": "application/json",
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      List<dynamic> list = response.data['data'];
-      shops.addAll(list.map((item) => ShopEntity.fromJson(item)));
-      update();
+
+    // FIX: Convert UI display value "--" to an empty string or null for the API
+    // If the API expects "waiting", "accepted", etc., but treats empty string as "all", use this:
+    String apiStatus = selectedStatus == "--" ? "" : selectedStatus;
+
+    try {
+      final response = await dio.get(
+        // FIX: Use apiStatus instead of selectedStatus directly
+        '$baseUrl/admin/all-shops?status=$apiStatus&page=$selectedPageCount&limit=$selectedLimit',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'accept': 'application/json',
+          },
+        ),
+      );
+
+      print(response.data);
+
+      if (response.statusCode == 200) {
+        List<dynamic> list = response.data['data'];
+        shops.addAll(list.map((item) => ShopEntity.fromJson(item)));
+        update();
+      } else {
+        showSnackBar(
+          message: "Failed to fetch shops. Status: ${response.statusCode}",
+          status: "Error",
+          isSucceed: false,
+        );
+      }
+    } catch (e) {
+      showSnackBar(
+        message: "Error fetching shops: $e",
+        status: "Error",
+        isSucceed: false,
+      );
     }
   }
+
+
 
   Future<void> editShop(id) async {
     // Validation

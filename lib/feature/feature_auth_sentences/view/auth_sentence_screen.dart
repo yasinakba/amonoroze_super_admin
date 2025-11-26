@@ -46,7 +46,7 @@ class AuthSentenceScreen extends StatelessWidget {
                             Spacer(),
                             Padding(padding: EdgeInsets.all(12),
                               child: IconButton(onPressed: () {
-                                controller.textContoller.text = sentence.text??'null';
+                                controller.textController.text = sentence.text??'null';
                                 controller.showBottomSheetEdit(
                                     id: sentence.id, context: context);
                               },
@@ -57,7 +57,7 @@ class AuthSentenceScreen extends StatelessWidget {
                                 showCustomDialog(context: context,
                                     onYesPressed: () =>
                                         controller.deleteSentence(
-                                            id: sentence.id,),
+                                            id: sentence.id,index: index),
                                     text: 'Do you want delete',
                                     objectName: sentence.text ?? '');
                               },
@@ -76,4 +76,9 @@ class AuthSentenceScreen extends StatelessWidget {
       );
     });
   }
+}
+AppBar authSentenceAppBar(context){
+  Get.lazyPut(() => AuthSentenceController(),);
+  var c = Get.find<AuthSentenceController>();
+ return AppBar(backgroundColor: Colors.white,actions: [IconButton(onPressed: () => c.showBottomSheetCreate(context: context), icon: Icon(Icons.add_circle),color: Colors.teal,),],);
 }

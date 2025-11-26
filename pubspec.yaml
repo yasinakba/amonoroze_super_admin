@@ -41,6 +41,7 @@ dependencies:
   shared_preferences:
   dio: ^5.9.0
   animated_bottom_navigation_bar: ^1.4.0
+  infinite_scroll_pagination: ^5.1.1
 
 dev_dependencies:
   flutter_test:

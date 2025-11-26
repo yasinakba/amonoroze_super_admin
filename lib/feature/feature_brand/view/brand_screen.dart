@@ -1,5 +1,6 @@
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/feature/feature_brand/controller/brand_controller.dart';
+import 'package:amonoroze_panel_admin/feature/feature_brand/entity/brand_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,7 +16,7 @@ class BrandScreen extends StatelessWidget {
             child: ListView.builder(
               itemCount: controller.brands.length,
               itemBuilder: (context, index) {
-                BrandEnitity brand = controller.brands[index];
+                BrandEntity brand = controller.brands[index];
                 return Table(
                   columnWidths: const {
                     0: FixedColumnWidth(150), // Image column
@@ -31,7 +32,7 @@ class BrandScreen extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
-                              "$baseImageUrl/${brand.image}",
+                              "$baseImageUrl/${brand.logo}",
                               height: 80,
                               width: 150,
                               fit: BoxFit.cover,
@@ -40,11 +41,20 @@ class BrandScreen extends StatelessWidget {
                           ),
                         ),
 
-                        // Banner Title + Details
                         Padding(
                           padding: const EdgeInsets.all(12),
                           child: Text(
-                            brand.title ?? "No Title",
+                            brand.name ?? "No Title",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            brand.description ?? "No Title",
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -58,7 +68,7 @@ class BrandScreen extends StatelessWidget {
                               controller.editBottomSheet(id:brand.id,context: context);
                             }, icon: Icon(Icons.edit,color: Colors.green,)),),
                             Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
-                              showCustomDialog(context: context,onYesPressed: () => controller.deleteBrand(id: brand.id,context: context), text: 'Do you want delete', objectName: brand.title??'');
+                              showCustomDialog(context: context,onYesPressed: () => controller.deleteBrand(id: brand.id,index: index), text: 'Do you want delete', objectName: brand.name??'');
                             }, icon: Icon(Icons.delete,color: Colors.pink.shade200,)),),
                           ],
                         ),

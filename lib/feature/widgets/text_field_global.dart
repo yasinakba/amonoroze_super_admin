@@ -27,7 +27,7 @@ class TextFiledGlobal extends StatelessWidget {
          filteringTextInputFormatter,
         ],
         controller: controller,
-        style: TextStyle(fontSize:isMobile? 14.sp:isDesktop?4.sp:6.sp,),
+        style: TextStyle(fontSize:isMobile? 14.sp:isDesktop?3.sp:6.sp,),
         decoration: InputDecoration(
           border: OutlineInputBorder(),
           suffixIcon: Icon(icon),
