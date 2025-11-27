@@ -26,7 +26,6 @@ class LocationController extends GetxController{
       );
 
       if (response.statusCode == 200) {
-        // Assuming the API follows the same structure { data: [...] } as your other endpoints
         List<dynamic> list = response.data['data'];
         provinces = list.map((item) => ProvinceEntity.fromJson(item)).toList();
         update();

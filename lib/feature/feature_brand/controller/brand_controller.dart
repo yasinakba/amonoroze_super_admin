@@ -20,6 +20,7 @@ class BrandController extends GetxController{
     // TODO: implement onInit
     super.onInit();
     setToken();
+    fetchBrand();
   }
   TextEditingController nameController = TextEditingController();
   TextEditingController descController = TextEditingController();
@@ -67,13 +68,13 @@ class BrandController extends GetxController{
           "description": descController.text,
           "logo": uploadController.selectedImage,
           "name": nameController.text,
+          // "id": id,
       };
 
       final response = await dio.put(
         "$baseUrl/admin/brands/$id",
         data: formData,
         options: Options(
-          validateStatus: (_) => true, // <--- NO THROW
           headers: {
             'Authorization': 'Bearer $token',
             'accept': 'application/json',

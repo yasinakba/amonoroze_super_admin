@@ -1,4 +1,6 @@
+import 'package:amonoroze_panel_admin/app_config/app_style/app_fonts.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
+import 'package:amonoroze_panel_admin/feature/feature_category/view/widget/drop_down_category.dart';
 import 'package:amonoroze_panel_admin/feature/feature_specification/controller/specification_controller.dart';
 import 'package:amonoroze_panel_admin/feature/feature_specification/entity/specification_entity.dart';
 import 'package:flutter/material.dart';
@@ -21,8 +23,8 @@ class SpecificationScreen extends StatelessWidget {
                   SpecificationEntity specify = controller.specification[index];
                   return Table(
                     columnWidths: const {
-                      0: FixedColumnWidth(150), // Image column
-                      1: FlexColumnWidth(), // Text column
+                      0: FixedColumnWidth(150),
+                      1: FlexColumnWidth(),
                     },
                     border: TableBorder.all(color: Colors.grey),
                     children: [
@@ -89,4 +91,12 @@ class SpecificationScreen extends StatelessWidget {
   }
 }
 
-AppBar specificationAppBar = AppBar(backgroundColor: Colors.white,);
+AppBar specificationAppBar(context){
+  return AppBar(backgroundColor: Colors.white,actions: [
+    IconButton(onPressed: () {
+    Get.lazyPut(() => SpecificationController(),);
+    var c = Get.find<SpecificationController>();
+    c.showBottomSheetForCreateParent(context);
+  }, icon: Icon(Icons.add_circle,color: Colors.green,),),],);
+}
+

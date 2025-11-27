@@ -1,16 +1,14 @@
+import 'package:amonoroze_panel_admin/feature/feature_category/controller/category_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../controller/location_controller.dart';
-
-class ProvinceDropdownGlobal extends StatelessWidget {
-  const ProvinceDropdownGlobal({super.key});
+class DropDownCategory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<LocationController>(
+    return GetBuilder<CategoryController>(
       initState: (_) {
-        Get.lazyPut(() => LocationController());
+        Get.lazyPut(() => CategoryController());
       },
       builder: (logic) {
         return Expanded(
@@ -24,19 +22,13 @@ class ProvinceDropdownGlobal extends StatelessWidget {
               child: DropdownButton<String>(
                 isExpanded: true,
                 hint: Text(
-                  logic.selectedProvince.name ?? "Select Province",
+                  logic.selectedCategory.title ?? "Select Province",
                 ),
-
-                // Selected VALUE must match a dropdown item value
-                value: logic.provinces.any((p) => p.id == logic.selectedProvince.id)
-                    ? logic.selectedProvince.id
-                    : null,
-
-                items: logic.provinces.map((province) {
+                items: logic.categories.map((category) {
                   return DropdownMenuItem<String>(
-                    value: province.id,                     // ID is the value
+                    value: category.id,
                     child: Text(
-                      province.name ?? "null",
+                      category.title ?? "null",
                       style: const TextStyle(fontSize: 14),
                     ),
                   );
@@ -46,11 +38,10 @@ class ProvinceDropdownGlobal extends StatelessWidget {
                   if (id == null) return;
 
                   // Get full object by ID
-                  final selected = logic.provinces.firstWhere(
+                  final selected = logic.categories.firstWhere(
                         (p) => p.id == id,
                   );
-                  logic.selectedProvince = selected;
-                  logic.fetchCity(selected.id);
+                  logic.selectedCategory = selected;
                   logic.update();
                 },
               ),

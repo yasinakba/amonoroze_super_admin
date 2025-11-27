@@ -23,6 +23,8 @@ class CategoryController extends GetxController{
     setToken();
   }
 
+  CategoryEntity selectedCategory = CategoryEntity();
+
   UploadController uploadController = Get.put(UploadController());
   String? token = '';
 
@@ -232,28 +234,49 @@ class CategoryController extends GetxController{
   Future createChildCategory(categoryId) async {
     if (titleController.text.isEmpty ||
         uploadController.selectedImage.isEmpty) {
-      showSnackBar(status: 'Error', message: 'Please Fill all argument', isSucceed: false);
+      showSnackBar(
+          status: 'Error',
+          message: 'Please Fill all argument',
+          isSucceed: false);
+      return; // Stop execution
     }
-    final response = await dio.post(
-      "$baseUrl/admin/categories",
-      data: {
-          "image": uploadController.selectedImage,
-          "parent_id": categoryId,
-          "title": titleController.text,
+
+    try {
+      final response = await dio.post(
+        "$baseUrl/admin/categories",
+        data: {
+          'image': uploadController.selectedImage,
+          'parent_id': categoryId,
+          'title': titleController.text,
         },
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-          "accept": "application/json",
-        },
-      ),
-    );
-    if(response.statusCode == 200){
-      showSnackBar(message: 'Succeed', status: 'Success', isSucceed: true);
-      Get.back();
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Content-Type": "application/json",
+            "accept": "application/json",
+          },
+        ),
+      );
+      print(response.data);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        titleController.clear(); // Good practice to clear input
+        Get.back();
+        fetchCategory(); // Refresh the list
+        showSnackBar(message: 'Succeed', status: 'Success', isSucceed: true);
+      } else {
+        showSnackBar(
+            message: 'Failed to create child category. Status: ${response.statusCode}',
+            status: 'Error',
+            isSucceed: false);
+      }
+    } catch (e) {
+      showSnackBar(
+          message: 'Error creating child category: $e',
+          status: 'Error',
+          isSucceed: false);
     }
   }
+
 
   Future<Widget>? showBottomSheetForCreateParent(context) async {
     bool isDesktop = Responsive.isDesktop(context);

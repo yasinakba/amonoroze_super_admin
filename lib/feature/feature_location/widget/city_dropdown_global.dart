@@ -1,5 +1,4 @@
 import 'package:amonoroze_panel_admin/feature/feature_location/controller/location_controller.dart';
-import 'package:amonoroze_panel_admin/feature/feature_location/entity/city_entity.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';

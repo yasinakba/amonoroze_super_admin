@@ -1,5 +1,5 @@
 import 'package:amonoroze_panel_admin/feature/feature_shop/entity/shop_entity.dart';
-import 'package:amonoroze_panel_admin/feature/feature_shop/view/widget/custom_dropdown.dart';
+import 'package:amonoroze_panel_admin/feature/feature_shop/view/widget/custom_dropdown_status.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,20 +29,18 @@ class ShopController extends GetxController {
 
   // List of dropdown options
   final List<String> statuses = [
-    "--",
     "waiting",
     "accepted",
     "rejected",
     "blocked",
   ];
-  String selectedStatus = "--";
+  String selectedStatus = "waiting";
 
   @override
   void onInit() {
     // TODO: implement onInit
     super.onInit();
     setToken();
-    fetchShop();
   }
 
   UploadController uploadController = Get.put(UploadController());
@@ -63,15 +61,9 @@ class ShopController extends GetxController {
       await setToken();
     }
     shops.clear();
-
-    // FIX: Convert UI display value "--" to an empty string or null for the API
-    // If the API expects "waiting", "accepted", etc., but treats empty string as "all", use this:
-    String apiStatus = selectedStatus == "--" ? "" : selectedStatus;
-
     try {
       final response = await dio.get(
-        // FIX: Use apiStatus instead of selectedStatus directly
-        '$baseUrl/admin/all-shops?status=$apiStatus&page=$selectedPageCount&limit=$selectedLimit',
+        '$baseUrl/admin/all-shops?status=$selectedStatus&page=1&limit=10',
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -106,7 +98,7 @@ class ShopController extends GetxController {
 
   Future<void> editShop(id) async {
     // Validation
-    if (reasonController.text.isEmpty) {
+    if (reasonController.text.isEmpty || selectedStatus == '--') {
       showSnackBar(
         message: 'Please fill all requirements',
         status: 'Error',
@@ -122,35 +114,30 @@ class ShopController extends GetxController {
           "additionalProp2": "string",
           "additionalProp3": "string",
         },
-        "shop_id": "string",
-        "status": "waiting",
-        "status_reason": "string",
+        "shop_id": id,
+        "status": selectedStatus,
+        "status_reason": reasonController.text,
       };
 
       final response = await dio.patch(
         "$baseUrl/admin/change-shop-status/$id",
         data: formData,
         options: Options(
-          validateStatus: (_) => true, // <--- NO THROW
+          validateStatus: (_) => false, // <--- NO THROW
           headers: {
-            "Authorization": "Bearer $token",
-            "Content-Type": "application/json",
-            "accept": "application/json",
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
           },
         ),
       );
-
+      print(response.statusCode);
       if (response.statusCode == 200) {
         reasonController.clear();
         selectedStatus = '--';
         fetchShop();
+        showSnackBar(message: "Shop updated successfully", status: "Success", isSucceed: true,);
         Get.back();
-
-        showSnackBar(
-          message: "Shop updated successfully",
-          status: "Success",
-          isSucceed: true,
-        );
         return;
       } else {
         // Backend error but not a crash
@@ -177,26 +164,18 @@ class ShopController extends GetxController {
           padding: EdgeInsets.all(5.w),
           child: Column(
             children: [
-              CustomDropdown(
-                list: statuses,
-                title: '--',
-                selected: selectedStatus,
-                onChanged: (value) {
-                  selectedStatus = value!;
-                  update();
-                },
-              ),
+              SizedBox(height:40.h,width: double.infinity,child: DropdownStatus()),
               TextFiledGlobal(
                 type: TextInputType.text,
                 controller: reasonController,
-                hint: 'Title',
+                hint: 'Reason',
                 icon: null,
                 filteringTextInputFormatter:
                     FilteringTextInputFormatter.singleLineFormatter,
               ),
               CustomButton(
                 text: 'Edit',
-                onPressed: () => (id),
+                onPressed: () => editShop(id),
               ),
             ],
           ),

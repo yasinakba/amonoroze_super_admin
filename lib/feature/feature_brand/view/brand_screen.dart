@@ -65,6 +65,8 @@ class BrandScreen extends StatelessWidget {
                           children: [
                             Spacer(),
                             Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
+                              controller.nameController.text = brand.name??'';
+                              controller.descController.text = brand.description??'';
                               controller.editBottomSheet(id:brand.id,context: context);
                             }, icon: Icon(Icons.edit,color: Colors.green,)),),
                             Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {

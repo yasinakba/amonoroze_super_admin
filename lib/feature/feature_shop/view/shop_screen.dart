@@ -3,7 +3,7 @@ import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/feature/feature_shop/controller/shop_controller.dart';
 import 'package:amonoroze_panel_admin/feature/feature_shop/entity/shop_entity.dart';
 import 'package:amonoroze_panel_admin/feature/feature_shop/view/edit_status_shop.dart';
-import 'package:amonoroze_panel_admin/feature/feature_shop/view/widget/custom_dropdown.dart';
+import 'package:amonoroze_panel_admin/feature/feature_shop/view/widget/custom_dropdown_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -22,17 +22,14 @@ class ShopScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Container(
-                width: 200.w,
-                height: 20.h,
-                child: Row(
-                  children: [
-                    Spacer(),
-                    CustomDropdown(list: controller.statuses,selected: controller.selectedStatus, title: 'وضعیت رو انتخاب کنید',),
-                    Spacer(),
-                    CustomDropdown(list: controller.numbers,selected: controller.selectedPageCount, title: 'تعداد صفحات را اتنخاب کنید',),
-                    Spacer(),
-                    CustomDropdown(list: controller.limits,selected: controller.selectedLimit, title: 'تعداد فروشگاه ها در هر صفحه را اتخاب کنید',),
+              Row(
+                children: [
+                  DropdownStatus(),
+                  ElevatedButton(onPressed: () async{
+                    controller.fetchShop();
+                  }, child: Text('Get shops',style: AppFonts.labelMedium.copyWith(color: Colors.black),)),
+                ],
+              ),
                     SizedBox(width: 20.w,),
                     Expanded(
                       child: ListView.builder(
@@ -82,16 +79,10 @@ class ShopScreen extends StatelessWidget {
                                         ),
                                       ),
                                   ),
-                                  Container(
-                                    child: Row(
-                                      children: [
-                                        Spacer(),
-                                        Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
-                                          controller.editBottomSheet(id:shop.id,context: context);
-                                        }, icon: Icon(Icons.edit,color: Colors.green,)),),
-                                      ],
-                                    ),
-                                  ),
+                                  Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
+                                    controller.reasonController.text = shop.name;
+                                    controller.editBottomSheet(id:shop.id,context: context);
+                                  }, icon: Icon(Icons.edit,color: Colors.green,)),),
                                 ],
                               ),
                             ],
@@ -99,17 +90,10 @@ class ShopScreen extends StatelessWidget {
                         },
                       ),
                     ),
-                    ElevatedButton(onPressed: () async{
-                     controller.fetchShop();
-                    }, child: Text('Get shops',style: AppFonts.labelMedium.copyWith(color: Colors.black),)),
-                  ],
-                ),
-              ),
-            ],
-          );
-        }),
-      ),
+                      ],
+                );
+        })
 
-    );
+    ));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:amonoroze_panel_admin/app_config/app_routes/name_routes.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/responsive.dart';
 import 'package:amonoroze_panel_admin/feature/feature_banner/entity/banner_entity.dart';
@@ -44,6 +45,7 @@ class BannerController extends GetxController {
   bool notFound = false;
   List<BannerEntity> banners = [];
   LocationController locationController = Get.put(LocationController());
+  TextEditingController routeController = TextEditingController();
 
   Future fetchBanners(level) async {
     try {
@@ -90,7 +92,7 @@ class BannerController extends GetxController {
 
   Future<void> editBanner(id) async {
     // Validation
-    if (titleController.text.isEmpty || editingLevelController.text.isEmpty) {
+    if (titleController.text.isEmpty || editingLevelController.text.isEmpty||routeController.text.isEmpty) {
       showSnackBar(
         message: 'Please fill all requirements',
         status: 'Error',
@@ -101,8 +103,8 @@ class BannerController extends GetxController {
     try {
       // Build form
       Map<String, dynamic> formData = {
-        "destination_id": "string",
-        "destination_screen": "string",
+        "destination_id": locationController.selectedCity.id,
+        "destination_screen": routeController.text,
         "Level": editingLevelController.text,
         "Title": titleController.text,
         "Image": uploadController.selectedImage,
@@ -190,7 +192,7 @@ class BannerController extends GetxController {
         uploadController.selectedImage.isEmpty ||
         token == '' ||
         titleController.text.isEmpty||
-        locationController.selectedCity.id =='') {
+        locationController.selectedCity.id ==''||routeController.text.isEmpty) {
       showSnackBar(
         status: 'Error',
         message: 'Please Fill all argument',
@@ -207,7 +209,7 @@ class BannerController extends GetxController {
           'level': levelController.text,
           "title": titleController.text,
           'destination_id': locationController.selectedCity.id,
-          'destination_screen': 'banner',
+          'destination_screen': routeController.text,
         },
         options: Options(
           headers: {
@@ -270,6 +272,14 @@ class BannerController extends GetxController {
                 filteringTextInputFormatter:
                     FilteringTextInputFormatter.singleLineFormatter,
               ),
+              TextFiledGlobal(
+                type: TextInputType.text,
+                controller: routeController,
+                hint: 'Enter route',
+                icon: Icons.title_outlined,
+                filteringTextInputFormatter:
+                    FilteringTextInputFormatter.singleLineFormatter,
+              ),
               ButtonGlobal(onTap: () => createBanner(), title: 'Add'),
             ],
           ),
@@ -303,6 +313,14 @@ class BannerController extends GetxController {
                 type: TextInputType.text,
                 controller: titleController,
                 hint: 'Title',
+                icon: null,
+                filteringTextInputFormatter:
+                    FilteringTextInputFormatter.singleLineFormatter,
+              ),
+              TextFiledGlobal(
+                type: TextInputType.text,
+                controller: routeController,
+                hint: 'Route',
                 icon: null,
                 filteringTextInputFormatter:
                     FilteringTextInputFormatter.singleLineFormatter,

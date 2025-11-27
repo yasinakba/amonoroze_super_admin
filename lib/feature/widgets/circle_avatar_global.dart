@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/responsive.dart';
@@ -10,6 +9,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 class CircleAvatarGlobal extends StatelessWidget {
+  const CircleAvatarGlobal({super.key});
+
   @override
   Widget build(BuildContext context) {
     bool isMobile = Responsive.isMobile(context);
