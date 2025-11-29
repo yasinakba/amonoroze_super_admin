@@ -24,6 +24,8 @@ class BrandController extends GetxController{
   }
   TextEditingController nameController = TextEditingController();
   TextEditingController descController = TextEditingController();
+  TextEditingController editNameController = TextEditingController();
+  TextEditingController editDescController = TextEditingController();
 
   UploadController uploadController = Get.put(UploadController());
 
@@ -56,19 +58,20 @@ class BrandController extends GetxController{
     }
   }
 
-  Future<void> editBrand({id}) async {
+  Future<void> editBrand({required id}) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? t = pref.getString('token');
     // Validation
-  if (nameController.text.isEmpty || uploadController.selectedImage.isEmpty || token == ''||descController.text.isEmpty) {
+  if (editNameController.text.isEmpty || uploadController.selectedImage.isEmpty || t == ''||editDescController.text.isEmpty) {
       showSnackBar(message: 'Please fill all requirements', status: 'Error', isSucceed: false);
       return;
     }
     try {
       // Build form
       Map<String, dynamic> formData = {
-          "description": descController.text,
+          "description": editDescController.text,
           "logo": uploadController.selectedImage,
-          "name": nameController.text,
-          // "id": id,
+          "name": editNameController.text,
       };
 
       final response = await dio.put(
@@ -76,13 +79,13 @@ class BrandController extends GetxController{
         data: formData,
         options: Options(
           headers: {
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $t',
             'accept': 'application/json',
             'Content-Type': 'application/json'
           },
         ),
       );
-
+      print(response.data);
       if (response.statusCode == 200) {
         descController.clear();
         nameController.clear();
@@ -139,10 +142,10 @@ class BrandController extends GetxController{
   final Dio dio = Dio();
 
   Future<void> createBrand() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    var t = preferences.getString('token');
     try {
-      // --- Validation ---
-
-      if (nameController.text.isEmpty || uploadController.selectedImage.isEmpty || token == ''||descController.text.isEmpty) {
+      if (nameController.text.isEmpty || uploadController.selectedImage.isEmpty || t == ''|| descController.text.isEmpty) {
         showSnackBar(
           status: "Error",
           message: "Please fill all required fields",
@@ -161,7 +164,7 @@ class BrandController extends GetxController{
         },
         options: Options(
           headers: {
-            "Authorization": "Bearer $token",
+            "Authorization": "Bearer $t",
             "Content-Type": "application/json",
             "accept": "application/json",
           },
@@ -194,45 +197,7 @@ class BrandController extends GetxController{
       );
     }
   }
-  Future<Widget>? showBottomSheetForCreateParent(context) async {
-    bool isDesktop = Responsive.isDesktop(context);
-    return await showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          padding: EdgeInsetsDirectional.symmetric(
-            horizontal: 10.w,
-            vertical: 10.h,
-          ),
-          height: 300.h,
-          width: isDesktop ? 120.w : 300.w,
-          child: Column(
-            children: [
-              CircleAvatarGlobal(),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: descController,
-                hint: 'Enter Description',
-                icon: Icons.text_fields,
-                filteringTextInputFormatter:
-                FilteringTextInputFormatter.singleLineFormatter,
-              ),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: nameController,
-                hint: 'Enter Name',
-                icon: Icons.text_fields,
-                filteringTextInputFormatter:
-                FilteringTextInputFormatter.singleLineFormatter,
-              ),
-              ButtonGlobal(onTap: () => createBrand(), title: 'Add ParentBrand'),
-            ],
-          ),
-        );
-      },
-    );
-  }
-  Future<Widget>? showBottomSheetForCreate({context,BrandId}) async {
+  Future<Widget>? showBottomSheetForCreate({required context}) async {
     bool isDesktop = Responsive.isDesktop(context);
     return await showModalBottomSheet(
       context: context,
@@ -271,7 +236,7 @@ class BrandController extends GetxController{
     );
   }
 
-  Future<Widget> editBottomSheet({id, context}) async {
+  Future<Widget> editBottomSheet({required id,required context}) async {
     return await showModalBottomSheet(
       builder: (BuildContext context) {
         return Container(
@@ -281,7 +246,7 @@ class BrandController extends GetxController{
               CircleAvatarGlobal(),
               TextFiledGlobal(
                 type: TextInputType.text,
-                controller: descController,
+                controller: editDescController,
                 hint: 'Enter Description',
                 icon: null,
                 filteringTextInputFormatter:
@@ -289,7 +254,7 @@ class BrandController extends GetxController{
               ),
               TextFiledGlobal(
                 type: TextInputType.text,
-                controller: nameController,
+                controller: editNameController,
                 hint: 'Enter Name',
                 icon: null,
                 filteringTextInputFormatter:

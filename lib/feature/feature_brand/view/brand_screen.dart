@@ -65,8 +65,9 @@ class BrandScreen extends StatelessWidget {
                           children: [
                             Spacer(),
                             Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
-                              controller.nameController.text = brand.name??'';
-                              controller.descController.text = brand.description??'';
+                              controller.editNameController.text = brand.name??'';
+                              controller.editDescController.text = brand.description??'';
+                              controller.uploadController.imageName = brand.logo??'';
                               controller.editBottomSheet(id:brand.id,context: context);
                             }, icon: Icon(Icons.edit,color: Colors.green,)),),
                             Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
@@ -91,8 +92,15 @@ AppBar brandAppBar({context}) {
   var c = Get.find<BrandController>();
   return AppBar(
     backgroundColor: Colors.white,
+    title: Text('Brands',style: styleText,),
+    centerTitle: true,
     actions: [
-      IconButton(onPressed: () => c.showBottomSheetForCreateParent(context), icon: Icon(Icons.add_circle,color: Colors.deepPurpleAccent.shade200,))
+      IconButton(onPressed: () {
+        c.nameController.clear();
+        c.descController.clear();
+        c.uploadController.selectedImage = '';
+        c.showBottomSheetForCreate(context: context);
+      }, icon: Icon(Icons.add_circle,color: Colors.deepPurpleAccent.shade200,))
     ],
   );
 }

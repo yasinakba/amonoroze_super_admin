@@ -200,7 +200,6 @@ class BannerController extends GetxController {
       );
       return; // Stop execution
     }
-
     try {
       final response = await dio.post(
         "$baseUrl/admin/banners",
@@ -244,44 +243,47 @@ class BannerController extends GetxController {
     return await showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Container(
-          padding: EdgeInsetsDirectional.symmetric(
-            horizontal: 10.w,
-            vertical: 10.h,
-          ),
-          height: 300.h,
-          width: isDesktop ? 120.w : 300.w,
-          child: Column(
-            children: [
-              CircleAvatarGlobal(),
-              ProvinceDropdownGlobal(),
-              CityDropdownGlobal(),
-              TextFiledGlobal(
-                type: TextInputType.number,
-                controller: levelController,
-                hint: 'Enter level',
-                icon: Icons.integration_instructions,
-                filteringTextInputFormatter:
-                    FilteringTextInputFormatter.digitsOnly,
-              ),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: titleController,
-                hint: 'Enter title',
-                icon: Icons.title_outlined,
-                filteringTextInputFormatter:
-                    FilteringTextInputFormatter.singleLineFormatter,
-              ),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: routeController,
-                hint: 'Enter route',
-                icon: Icons.title_outlined,
-                filteringTextInputFormatter:
-                    FilteringTextInputFormatter.singleLineFormatter,
-              ),
-              ButtonGlobal(onTap: () => createBanner(), title: 'Add'),
-            ],
+        return FractionallySizedBox(
+          heightFactor: 1,
+          child: Container(
+            padding: EdgeInsetsDirectional.symmetric(
+              horizontal: 10.w,
+              vertical: 10.h,
+            ),
+            height: 300.h,
+            width: isDesktop ? 120.w : 300.w,
+            child: Column(
+              children: [
+                CircleAvatarGlobal(),
+                ProvinceDropdownGlobal(),
+                CityDropdownGlobal(),
+                TextFiledGlobal(
+                  type: TextInputType.number,
+                  controller: levelController,
+                  hint: 'Enter level',
+                  icon: Icons.integration_instructions,
+                  filteringTextInputFormatter:
+                      FilteringTextInputFormatter.digitsOnly,
+                ),
+                TextFiledGlobal(
+                  type: TextInputType.text,
+                  controller: titleController,
+                  hint: 'Enter title',
+                  icon: Icons.title_outlined,
+                  filteringTextInputFormatter:
+                      FilteringTextInputFormatter.singleLineFormatter,
+                ),
+                TextFiledGlobal(
+                  type: TextInputType.text,
+                  controller: routeController,
+                  hint: 'Enter route',
+                  icon: Icons.title_outlined,
+                  filteringTextInputFormatter:
+                      FilteringTextInputFormatter.singleLineFormatter,
+                ),
+                ButtonGlobal(onTap: () => createBanner(), title: 'Add'),
+              ],
+            ),
           ),
         );
       },
@@ -293,9 +295,8 @@ class BannerController extends GetxController {
       scrollControlDisabledMaxHeightRatio: 400.h,
       constraints: BoxConstraints(minHeight: 690.h),
       builder: (BuildContext context) {
-        return Container(
-          height: 690.h,
-          padding: EdgeInsets.all(2.w),
+        return FractionallySizedBox(
+          heightFactor: 2,
           child: Column(
             children: [
               CircleAvatarGlobal(),

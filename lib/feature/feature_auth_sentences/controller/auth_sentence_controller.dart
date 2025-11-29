@@ -1,3 +1,4 @@
+import 'package:amonoroze_panel_admin/app_config/app_routes/name_routes.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/responsive.dart';
 import 'package:amonoroze_panel_admin/feature/feature_auth_sentences/entity/sentence_entity.dart';
@@ -68,7 +69,7 @@ class AuthSentenceController extends GetxController {
   }
 
 
-  Future<void> editSentence({id}) async {
+  Future<void> editSentence({required id}) async {
     // Validation
     if (textController.text.isEmpty || token == '') {
       showSnackBar(message: 'Please fill all requirements', status: 'Error', isSucceed: false);
@@ -111,13 +112,18 @@ class AuthSentenceController extends GetxController {
   }
 
 
-  Future<void> deleteSentence({id, index}) async {
+  Future<void> deleteSentence({required id,required index}) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t =preferences.getString('token');
+    if(t==''){
+      Get.toNamed(NamedRoute.loginScreen);
+    }
     try {
       final response = await dio.delete(
         '$baseUrl/admin/sentences/$id',
         options: Options(
           headers: {
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $t',
             'accept': 'application/json',
           },
         ),
@@ -148,8 +154,13 @@ class AuthSentenceController extends GetxController {
 
 
   Future<void> createSentence() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t =preferences.getString('token');
+    if(t==''){
+      Get.toNamed(NamedRoute.loginScreen);
+    }
     try {
-      if (uploadController.selectedImage.isEmpty || token == ''||textController.text.isEmpty) {
+      if (uploadController.selectedImage.isEmpty || t == ''||textController.text.isEmpty) {
         showSnackBar(
           status: "Error",
           message: "Please fill all required fields",
@@ -166,7 +177,7 @@ class AuthSentenceController extends GetxController {
         },
         options: Options(
           headers: {
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $t',
             'Content-Type': 'application/json',
             'accept': 'application/json',
           },
@@ -175,13 +186,13 @@ class AuthSentenceController extends GetxController {
 
       // --- Success ---
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.back();
         fetchAuthSentences();
         showSnackBar(
           message: "Brand created successfully",
           status: "Success",
           isSucceed: true,
         );
+        Get.back();
       } else {
         showSnackBar(
           status: "Error",

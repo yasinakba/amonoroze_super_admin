@@ -15,7 +15,10 @@ import '../../../app_config/constant/contstant.dart';
 import '../../feature_shop/view/widget/custom_button.dart';
 import '../../feature_upload/upload_controller.dart';
 import '../../widgets/text_field_global.dart';
-
+class ReasonRow {
+  TextEditingController keyController = TextEditingController();
+  TextEditingController valueController = TextEditingController();
+}
 class ShopController extends GetxController {
   final Dio dio = Dio();
   var isLoading = false.obs;
@@ -94,11 +97,29 @@ class ShopController extends GetxController {
     }
   }
 
+  var reasonRows = <ReasonRow>[].obs;
+  void addReasonRow() {
+    reasonRows.add(ReasonRow());
+    update(); // update UI
+  }
+
+  void removeReasonRow(int index) {
+    reasonRows.removeAt(index);
+    update();
+  }
 
 
   Future<void> editShop(id) async {
-    // Validation
-    if (reasonController.text.isEmpty || selectedStatus == '--') {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t = preferences.getString('token');
+    Map<String, String> dynamicReasons = {};
+    for (var row in reasonRows) {
+      if (row.keyController.text.isNotEmpty) {
+        dynamicReasons[row.keyController.text] = row.valueController.text;
+      }
+    }
+
+    if (reasonController.text.isEmpty || selectedStatus == '--'|| t == '') {
       showSnackBar(
         message: 'Please fill all requirements',
         status: 'Error',
@@ -109,11 +130,7 @@ class ShopController extends GetxController {
     try {
       // Build form
       Map<String, dynamic> formData = {
-        "reasons": {
-          "additionalProp1": "string",
-          "additionalProp2": "string",
-          "additionalProp3": "string",
-        },
+        "reasons": dynamicReasons,
         "shop_id": id,
         "status": selectedStatus,
         "status_reason": reasonController.text,
@@ -125,7 +142,7 @@ class ShopController extends GetxController {
         options: Options(
           validateStatus: (_) => false, // <--- NO THROW
           headers: {
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $t',
             'Content-Type': 'application/json',
             'accept': 'application/json',
           },
@@ -148,6 +165,7 @@ class ShopController extends GetxController {
         );
       }
     } catch (e, s) {
+      print(e);
       showSnackBar(
         message: 'Encountered error: $e',
         status: 'Error',
@@ -158,30 +176,133 @@ class ShopController extends GetxController {
 
 
   Future<Widget> editBottomSheet({id, context}) async {
+    // Clear previous rows when opening
+    reasonRows.clear();
+
     return await showModalBottomSheet(
+      isScrollControlled: true, // Important so keyboard doesn't hide content
+      context: context,
       builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(5.w),
-          child: Column(
-            children: [
-              SizedBox(height:40.h,width: double.infinity,child: DropdownStatus()),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: reasonController,
-                hint: 'Reason',
-                icon: null,
-                filteringTextInputFormatter:
-                    FilteringTextInputFormatter.singleLineFormatter,
+        return FractionallySizedBox(
+          heightFactor: 1,
+          child: Padding(
+            // Adjust padding for keyboard
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 10.w,
+                right: 10.w,
+                top: 10.h
+            ),
+            child: Container(
+              // Constrain height so it doesn't take full screen but is scrollable
+              constraints: BoxConstraints(maxHeight: 500.h),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Edit Shop Status", style: TextStyle(fontSize: 4.sp, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 10.h),
+
+                    // Status Dropdown
+                    SizedBox(
+                        height: 40.h,
+                        width: double.infinity,
+                        child: DropdownStatus()
+                    ),
+                    SizedBox(height: 10.h),
+
+                    // Main Reason
+                    TextFiledGlobal(
+                      type: TextInputType.text,
+                      controller: reasonController,
+                      hint: 'Main Reason',
+                      icon: null,
+                      filteringTextInputFormatter: FilteringTextInputFormatter.singleLineFormatter,
+                    ),
+
+                    Divider(height: 30.h),
+
+                    // --- DYNAMIC REASONS SECTION ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Additional Details (Map)", style: TextStyle(fontWeight: FontWeight.bold)),
+                        IconButton(
+                          icon: Icon(Icons.add_circle, color: Colors.blue),
+                          onPressed: () => addReasonRow(),
+                        )
+                      ],
+                    ),
+
+                    // List of Key-Value Pairs
+                    GetBuilder<ShopController>(
+                        builder: (logic) {
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: logic.reasonRows.length,
+                            separatorBuilder: (c, i) => SizedBox(height: 8.h),
+                            itemBuilder: (context, index) {
+                              var row = logic.reasonRows[index];
+                              return Row(
+                                children: [
+                                  // Key Input
+                                  Expanded(
+                                    flex: 2,
+                                    child: TextField(
+                                      controller: row.keyController,
+                                      decoration: InputDecoration(
+                                        labelText: "Key (e.g. Prop1)",
+                                        isDense: true,
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 5.w),
+                                  // Value Input
+                                  Expanded(
+                                    flex: 3,
+                                    child: TextField(
+                                      controller: row.valueController,
+                                      decoration: InputDecoration(
+                                        labelText: "Value",
+                                        isDense: true,
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                                      ),
+                                    ),
+                                  ),
+                                  // Delete Button
+                                  IconButton(
+                                    icon: Icon(Icons.remove_circle_outline, color: Colors.red),
+                                    onPressed: () => logic.removeReasonRow(index),
+                                  )
+                                ],
+                              );
+                            },
+                          );
+                        }
+                    ),
+                    // --------------------------------
+
+                    SizedBox(height: 20.h),
+                    CustomButton(
+                      text: 'Save Changes',
+                      onPressed: () => editShop(id),
+                    ),
+                    SizedBox(height: 20.h),
+                  ],
+                ),
               ),
-              CustomButton(
-                text: 'Edit',
-                onPressed: () => editShop(id),
-              ),
-            ],
+            ),
           ),
         );
       },
-      context: context,
     );
   }
+
 }
+// Helper class for the UI list
+

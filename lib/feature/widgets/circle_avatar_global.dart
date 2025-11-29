@@ -27,7 +27,7 @@ class CircleAvatarGlobal extends StatelessWidget {
             children: [
               Positioned.fill(
                 child: ClipOval(
-                  child: logic.webImageUrl == null
+                  child:  logic.webImageUrl == null
                       ? Image.network(
                           "https://i.postimg.cc/6qwD52gs/image.png",
                           fit: BoxFit.cover,
@@ -36,15 +36,11 @@ class CircleAvatarGlobal extends StatelessWidget {
                             return Container();
                           },
                         )
-                      : kIsWeb
-                      ? Image.network(logic.webImageUrl!, fit: BoxFit.cover)
-                      : logic.imageName == ''? Image.file(
-                          File(logic.pickedFile!.path),
-                          fit: BoxFit.cover,
-                        ): Image.network(
-                          "$baseImageUrl/${logic.imageName}",
-                          fit: BoxFit.cover,
-                        ),
+                      : Image.network(logic.webImageUrl!, fit: BoxFit.cover)
+                      // : Image.network(
+                      //     "$baseImageUrl/${logic.imageName}",
+                      //     fit: BoxFit.cover,
+                      //   ),
                 ),
               ),
               Container(

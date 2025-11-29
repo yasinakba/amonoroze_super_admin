@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:amonoroze_panel_admin/feature/feature_category/controller/category_controller.dart';
 import 'package:amonoroze_panel_admin/feature/feature_category/view/widget/drop_down_category.dart';
 import 'package:amonoroze_panel_admin/feature/feature_specification/entity/specification_entity.dart' hide Options;
@@ -20,6 +22,9 @@ class SpecificationController extends GetxController {
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
   final orderController = TextEditingController(text: "0");
+  final editTitleController = TextEditingController();
+  final editDescriptionController = TextEditingController();
+  final editOrderController = TextEditingController(text: "0");
   final CategoryController categoryController = Get.put(CategoryController());
   final UploadController uploadController = Get.put(UploadController());
 
@@ -51,17 +56,17 @@ class SpecificationController extends GetxController {
   void removeOption(int index) {
     optionsList.removeAt(index);
   }
-  Map<String, dynamic> collectData(String categoryId,) {
+  Map<String, dynamic> collectData() {
     // Map the dynamic options rows to the JSON structure
     List<Map<String, dynamic>> mappedOptions = optionsList.map((row) {
       return {
-        "order": int.tryParse(row.orderController.text) ?? 0,
+        "order": int.tryParse(row.orderController.text.trim()) ?? 0,
         "value": row.valueController.text,
       };
     }).toList();
 
     return {
-      "category_id": categoryId,
+      "category_id": categoryController.selectedCategory.id,
       "title": titleController.text,
       "description": descriptionController.text,
       "guide_video": uploadController.selectedVideo, // From your UploadController
@@ -71,36 +76,105 @@ class SpecificationController extends GetxController {
       "options": mappedOptions,
     };
   }
+  Map<String, dynamic> editCollectData() {
+    // Map the dynamic options rows to the JSON structure
+    List<Map<String, dynamic>> mappedOptions = optionsList.map((row) {
+      return {
+        "order": int.tryParse(row.orderController.text) ?? 0,
+        "value": row.valueController.text,
+      };
+    }).toList();
 
+    return {
+      "category_id": categoryController.selectedCategory.id,
+      "title": editTitleController.text,
+      "description": editDescriptionController.text,
+      "guide_video": uploadController.selectedVideo, // From your UploadController
+      "is_required": isRequired.value,
+      "order": int.tryParse(editOrderController.text) ?? 0,
+      "type": selectedType.value,
+      "options": mappedOptions,
+    };
+  }
+  Future<void> createSpecification() async {
+    final p = await SharedPreferences.getInstance();
+    var t = p.getString('token');
+    try {
+      final response = await dio.post(
+        "$baseUrl/admin/specifications",
+        data:jsonEncode(collectData()),
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $t",
+            "Content-Type": "application/json",
+            "accept": "application/json",
+          },
+        ),
+      );
+      print(response.statusCode);
+      print(response.data);
+      // --- Success ---
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        fetchSpecifications();
+        showSnackBar(
+          message: "Category created successfully",
+          status: "Success",
+          isSucceed: true,
+        );
+        Get.back();
+      } else {
+        showSnackBar(
+          status: "Error",
+          message: "Unexpected response: ${response.statusCode}",
+          isSucceed: false,
+        );
+      }
+    } catch (e) {
+      print(e);
+      showSnackBar(
+        status: "Error",
+        message: "Failed to create category: $e",
+        isSucceed: false,
+      );
+    }
+  }
 
   String? token = '';
   final Dio dio = Dio();
 
   setToken() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    token = preferences.getString('token');
+
   }
 
   List<SpecificationEntity> specification = [];
+  List<SpecificationEntity> specificationInherited = [];
+  List<CategoryEntity> specificationCategory= [];
 
   Future fetchSpecifications() async {
-    if (token == '') {
-      await setToken();
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t = preferences.getString('token');
+
+    if (t == '') {
+      showSnackBar(message: 'Token is missing', status: 'Error', isSucceed: false);
+      return;
     }
+
     specification.clear();
+
     try {
       final response = await dio.get(
         '$baseUrl/admin/specifications',
         options: Options(
           headers: {
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $t',
             'accept': 'application/json',
           },
         ),
       );
+      print(response.statusCode);
       if (response.statusCode == 200) {
-        List<dynamic> list = response.data['data'];
-        specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
+        final list = response.data['data'];
+        specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)),);
         update();
       } else {
         showSnackBar(
@@ -118,21 +192,32 @@ class SpecificationController extends GetxController {
     }
   }
 
-  Future fetchSpecificationCategory({cId}) async {
-    specification.clear();
+  Future fetchSpecificationCategory() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t = preferences.getString('token');
+
+    if (t == null || t.isEmpty) {
+      showSnackBar(message: 'Token is missing', status: 'Error', isSucceed: false);
+      return;
+    }
+
+    specificationCategory.clear();
+
     try {
       final response = await dio.get(
-        '$baseUrl/admin/specifications/category/$cId',
+        '$baseUrl/admin/specifications/category/${categoryController.selectedCategory.id}',
         options: Options(
           headers: {
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $t',
             'accept': 'application/json',
           },
         ),
       );
       if (response.statusCode == 200) {
-        List<dynamic> list = response.data['data'];
-        specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
+        final list = response.data['data'] as List;
+        specificationCategory.addAll(
+          list.map((item) => CategoryEntity.fromJson(item)),
+        );
         update();
       } else {
         showSnackBar(
@@ -149,6 +234,7 @@ class SpecificationController extends GetxController {
       );
     }
   }
+
   final List<String> inputTypes = [
     "input_single",
     "input_multiple",
@@ -158,123 +244,137 @@ class SpecificationController extends GetxController {
     "radio"
   ];
 
-  Future fetchSpecificationCategoryInherited({cId}) async {
-    specification.clear();
-    final response = await dio.get(
-      '$baseUrl/admin/specifications/category/$cId/inherited',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'accept': 'application/json',
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
-      update();
-    }
-  }
-
-  Future fetchSpecificationsId({id}) async {
-    specification.clear();
-    final response = await dio.get(
-      '$baseUrl/admin/specifications/$id',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'accept': 'application/json',
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
-      update();
-    }
-  }
-
-  Future editSpecifications({id}) async {
-    specification.clear();
-    final response = await dio.get(
-      '$baseUrl/admin/specifications/$id',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
-    );
-    if (response.statusCode == 200) {
-      List<dynamic> list = response.data['data'];
-      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
-      update();
-    }
-  }
-  Future<void> createSpecification() async {
+  Future fetchSpecificationCategoryInherited() async{
     try {
-      // --- Validation ---
-
-      if (uploadController.selectedImage.isEmpty || token == '') {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      String? t = preferences.getString('token');
+      // --- Validate Token ---
+      if (t == '') {
         showSnackBar(
-          status: "Error",
-          message: "Please fill all required fields",
+          message: 'Token is missing',
+          status: 'Error',
           isSucceed: false,
         );
-        return; // Prevent API call if data is invalid
+        return;
       }
 
-      // --- API Request ---
-      final response = await dio.post(
-        "$baseUrl/admin/specifications",
-        data:collectData(categoryController.selectedCategory.id??''),
+      // --- Validate Category ID ---
+      final cId = categoryController.selectedCategory.id;
+      if (cId == null) {
+        showSnackBar(
+          message: 'No category selected',
+          status: 'Error',
+          isSucceed: false,
+        );
+        return;
+      }
+
+      specificationInherited.clear();
+
+      // --- API Call ---
+      final response = await dio.get(
+        '$baseUrl/admin/specifications/category/$cId/inherited',
         options: Options(
           headers: {
-            "Authorization": "Bearer $token",
-            "Content-Type": "application/json",
-            "accept": "application/json",
+            'Authorization': 'Bearer $t',
+            'accept': 'application/json',
           },
         ),
       );
-
-      // --- Success ---
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.back();
-        fetchSpecifications();
-        showSnackBar(
-          message: "Category created successfully",
-          status: "Success",
-          isSucceed: true,
+      // --- Response Handling ---
+      if (response.statusCode == 200) {
+        final List<dynamic> list = response.data['data'];
+        specificationInherited.addAll(
+          list.map((item) => SpecificationEntity.fromJson(item)),
         );
+        update();
       } else {
         showSnackBar(
+          message: "Failed to fetch inherited specs. Status: ${response.statusCode}",
           status: "Error",
-          message: "Unexpected response: ${response.statusCode}",
           isSucceed: false,
         );
       }
     } catch (e) {
-      // --- Error Handling ---
+      // --- Global Error Catch ---
       showSnackBar(
+        message: "Error fetching inherited specifications: $e",
         status: "Error",
-        message: "Failed to create category: $e",
         isSucceed: false,
       );
     }
   }
 
-  Future<void> deleteSpecification({id}) async {
-    try {
-      // --- Validation ---
 
-      if (uploadController.selectedImage.isEmpty || token == '') {
+  Future fetchSpecificationsId({required id}) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t = preferences.getString('token');
+    final response = await dio.get(
+      '$baseUrl/admin/specifications/$id',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $t',
+          'accept': 'application/json',
+        },
+      ),
+    );
+    if (response.statusCode == 200) {
+      List<dynamic> list = response.data['data'];
+      specification.addAll(list.map((item) => SpecificationEntity.fromJson(item)));
+      update();
+    }
+  }
+
+  Future editSpecifications({required id}) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t = preferences.getString('token');
+    try {
+      final response = await dio.put(
+        '$baseUrl/admin/specifications/$id',
+        data: jsonEncode(editCollectData()),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $t',
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        // Ideally, you should populate your text controllers here with response.data
+        update();
+      } else {
+        showSnackBar(
+          message: "Failed to fetch specification details. Status: ${response.statusCode}",
+          status: "Error",
+          isSucceed: false,
+        );
+      }
+    } catch (e) {
+      print(e);
+      showSnackBar(
+        message: "Error fetching specification details: $e",
+        status: "Error",
+        isSucceed: false,
+      );
+    }
+  }
+
+
+
+  Future<void> deleteSpecification({required id}) async {
+    try {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      String? t = pref.getString('token');
+
+      if (t == '') {
         showSnackBar(
           status: "Error",
           message: "Please fill all required fields",
           isSucceed: false,
         );
-        return; // Prevent API call if data is invalid
+        return; // Exit the function if validation fails
       }
 
       // --- API Request ---
@@ -282,7 +382,7 @@ class SpecificationController extends GetxController {
         "$baseUrl/admin/specifications/$id",
         options: Options(
           headers: {
-            "Authorization": "Bearer $token",
+            "Authorization": "Bearer $t",
             "accept": "application/json",
           },
         ),
@@ -290,13 +390,13 @@ class SpecificationController extends GetxController {
 
       // --- Success ---
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.back();
         fetchSpecifications();
         showSnackBar(
           message: "Category created successfully",
           status: "Success",
           isSucceed: true,
         );
+        Get.back();
       } else {
         showSnackBar(
           status: "Error",
@@ -305,74 +405,12 @@ class SpecificationController extends GetxController {
         );
       }
     } catch (e) {
-      // --- Error Handling ---
       showSnackBar(
         status: "Error",
         message: "Failed to create category: $e",
         isSucceed: false,
       );
     }
-  }
-
-  Future<Widget>? showBottomSheetForCreateParent(context) async {
-    bool isDesktop = Responsive.isDesktop(context);
-    return await showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          padding: EdgeInsetsDirectional.symmetric(
-            horizontal: 10.w,
-            vertical: 10.h,
-          ),
-          height: 300.h,
-          width: isDesktop ? 120.w : 300.w,
-          child: Column(
-            children: [
-              // TextFiledGlobal(
-              //   type: TextInputType.text,
-              //   controller: ,
-              //   hint: 'Enter title',
-              //   icon: Icons.text_fields,
-              //   filteringTextInputFormatter:
-              //       FilteringTextInputFormatter.singleLineFormatter,
-              // ),
-              ButtonGlobal(
-                onTap: () => createSpecification(),
-                title: 'Add ParentCategory',
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<Widget> editBottomSheet({id, context}) async {
-    return await showModalBottomSheet(
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(5.w),
-          child: Column(
-            children: [
-              DropDownCategory(),
-              // TextFiledGlobal(
-              //   type: TextInputType.text,
-              //   controller: titleController,
-              //   hint: 'Enter title',
-              //   icon: null,
-              //   filteringTextInputFormatter:
-              //       FilteringTextInputFormatter.singleLineFormatter,
-              // ),
-              CustomButton(
-                text: 'Edit',
-                onPressed: () => editSpecifications(id: id),
-              ),
-            ],
-          ),
-        );
-      },
-      context: context,
-    );
   }
 }
 class OptionRow {

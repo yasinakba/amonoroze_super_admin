@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         getPages: Pages.pages,
         title: 'Flutter GetX Login',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
           scaffoldBackgroundColor: Colors.white,
         ),
         initialRoute: NamedRoute.loginScreen, // start with Login screen

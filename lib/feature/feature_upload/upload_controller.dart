@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:html' as html;
+import 'dart:js_interop';
+import 'package:web/web.dart' as html;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,7 +27,7 @@ class UploadController extends GetxController {
   final String uploadVideoUrl = "$baseUrl/admin/upload-video";
   XFile? pickedFile;
 
-  Future<void> uploadImage() async {
+  void uploadImage() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? token = preferences.getString('token');
     final picker = ImagePicker();
@@ -42,9 +43,13 @@ class UploadController extends GetxController {
       final bytes = await file.readAsBytes();
       webImageBytes = bytes;
 
-      // Create Blob for preview
-      final blob = html.Blob([bytes]);
-      webImageUrl = html.Url.createObjectUrlFromBlob(blob);
+      // Convert Dart Uint8List to JS Uint8Array for the Blob
+      final jsData = bytes.toJS;
+
+      // Create Blob for preview using the JS array
+      final blob = html.Blob([jsData].toJS);
+      webImageUrl = html.URL.createObjectURL(blob);
+
       update();
     } else {
       // Mobile preview logic (if you have a variable for File path)
@@ -84,36 +89,23 @@ class UploadController extends GetxController {
     // --- 5. Send & Handle Response ---
     try {
       var response = await request.send();
-
       if (response.statusCode == 200) {
         var responseBody = await response.stream.bytesToString();
         var data = jsonDecode(responseBody);
-
-        // Adjust 'data' access based on your actual API response structure
-        selectedImage = data['data']['object_name'];
-
-        showSnackBar(
-            message: "Success",
-            status: "Image uploaded successfully",
-            isSucceed: true
-        );
+        selectedImage = data['object_name'];
         update();
       } else {
         showSnackBar(
-            message: "Error",
-            status: "Upload failed: ${response.statusCode}",
-            isSucceed: false
+          message: "Error",
+          status: "Upload failed: ${response.statusCode}",
+          isSucceed: false,
         );
       }
     } catch (e) {
-      showSnackBar(
-          message: "Error",
-          status: "Exception: $e",
-          isSucceed: false
-      );
+      print(e);
+      showSnackBar(message: "Error", status: "Exception: $e", isSucceed: false);
     }
   }
-
 
   XFile? videoPicked;
   String? selectedVideo;
@@ -141,11 +133,17 @@ class UploadController extends GetxController {
         final bytes = await file.readAsBytes();
         webVideoBytes = bytes;
 
-        // Create a Blob specifically for video to ensure player compatibility
-        final blob = html.Blob([bytes], 'video/mp4');
+        // Convert Dart Uint8List to JS Uint8Array
+        final jsData = bytes.toJS;
+
+        // Create Blob with specific MIME type using BlobPropertyBag
+        final blob = html.Blob(
+          [jsData].toJS,
+          html.BlobPropertyBag(type: 'video/mp4'),
+        );
 
         // Create the URL for the video player widget
-        selectedVideo = html.Url.createObjectUrlFromBlob(blob);
+        selectedVideo = html.URL.createObjectURL(blob);
 
         update();
       } else {
@@ -200,7 +198,7 @@ class UploadController extends GetxController {
 
         // Assuming your API returns the filename in the same structure
         // You might want to store this in a different variable like 'selectedVideo'
-        selectedVideo = data['data']['object_name'];
+        selectedVideo = data['object_name'];
 
         showSnackBar(
           message: "Success",
@@ -227,8 +225,7 @@ class UploadController extends GetxController {
   VideoPlayerController? _videoPlayerController;
 
   void initializeVideoPlayer() {
-    _videoPlayerController =
-    VideoPlayerController.file(File(videoPicked!.path))
+    _videoPlayerController = VideoPlayerController.file(File(videoPicked!.path))
       ..initialize().then((_) {
         update();
       });

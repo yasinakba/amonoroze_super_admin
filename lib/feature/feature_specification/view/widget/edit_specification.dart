@@ -1,22 +1,23 @@
-import 'package:amonoroze_panel_admin/feature/feature_category/view/widget/drop_down_category.dart';
-import 'package:amonoroze_panel_admin/feature/feature_specification/controller/specification_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../../feature_upload/upload_controller.dart';
+import '../../controller/specification_controller.dart';
 
-class CreateSpecificationScreen extends StatelessWidget {
+class EditSpecification extends StatelessWidget {
+  final String specificationId;
+
+  EditSpecification({required this.specificationId});
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the specific form controller
-
-    return GetBuilder<SpecificationController>(initState:(state) {
+    return GetBuilder<SpecificationController>(initState: (state) {
       Get.lazyPut(() => SpecificationController(),);
-    },builder: (logic) {
+    }, builder: (logic) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Create Specification",),backgroundColor: Colors.white,),
+        appBar: AppBar(title: const Text("Edit Specification",),
+          backgroundColor: Colors.white,),
         body: SingleChildScrollView(
           padding: EdgeInsets.all(16.w),
           child: Column(
@@ -26,20 +27,20 @@ class CreateSpecificationScreen extends StatelessWidget {
               _buildSectionTitle("Basic Info"),
               SizedBox(height: 10.h),
               TextField(
-                controller: logic.titleController,
+                controller: logic.editTitleController,
                 decoration: const InputDecoration(
                     labelText: "Title", border: OutlineInputBorder()),
               ),
               SizedBox(height: 10.h),
               TextField(
-                controller: logic.descriptionController,
+                controller: logic.editDescriptionController,
                 decoration: const InputDecoration(
                     labelText: "Description", border: OutlineInputBorder()),
                 maxLines: 3,
               ),
               SizedBox(height: 10.h),
               TextField(
-                controller: logic.orderController,
+                controller: logic.editOrderController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                     labelText: "Display Order", border: OutlineInputBorder()),
@@ -75,8 +76,6 @@ class CreateSpecificationScreen extends StatelessWidget {
                           contentPadding: EdgeInsets.zero,
                         )),
                   ),
-                  SizedBox(width: 10.w),
-                  DropDownCategory(),
                 ],
               ),
 
@@ -108,8 +107,8 @@ class CreateSpecificationScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                        Text("Uploaded: ${controller.selectedVideo}",
-                            style: const TextStyle(color: Colors.green)),
+                      Text("Uploaded: ${controller.selectedVideo}",
+                          style: const TextStyle(color: Colors.green)),
                     ],
                   );
                 },
@@ -189,7 +188,7 @@ class CreateSpecificationScreen extends StatelessWidget {
                 height: 50.h,
                 child: ElevatedButton(
                   onPressed: () async {
-                  logic.createSpecification();
+                    logic.editSpecifications(id: specificationId);
                   },
                   child: const Text("Create Specification"),
                 ),
@@ -213,4 +212,3 @@ class CreateSpecificationScreen extends StatelessWidget {
     );
   }
 }
-
