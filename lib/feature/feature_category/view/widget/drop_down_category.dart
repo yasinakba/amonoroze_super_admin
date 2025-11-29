@@ -22,7 +22,7 @@ class DropDownCategory extends StatelessWidget {
               child: DropdownButton<String>(
                 isExpanded: true,
                 hint: Text(
-                  logic.selectedCategory.title ?? "Select Province",
+                  logic.selectedCategory.title ?? "Select Category",
                 ),
                 items: logic.categories.map((category) {
                   return DropdownMenuItem<String>(

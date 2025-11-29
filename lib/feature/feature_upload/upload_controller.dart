@@ -120,7 +120,14 @@ class UploadController extends GetxController {
     // 1. Pick Video
     final file = await picker.pickVideo(source: ImageSource.gallery);
     if (file == null) return;
-
+      int sizeInBytes = await file.length();
+    if (sizeInBytes > 20) {
+      showSnackBar(
+        message: "File too large! Max allowed is 2MB.",
+        status: "Error", isSucceed: false,
+      );
+      return;
+    }
     videoPicked = file;
     final extension = file.name
         .split('.')
