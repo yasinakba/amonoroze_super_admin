@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
+import '../widget/create_story_bottomsheet.dart';
+
 class AdminStoriesScreeen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -107,4 +109,9 @@ class AdminStoriesScreeen extends StatelessWidget {
   }
 }
 
-AppBar adminStoreAppBar = AppBar(backgroundColor: Colors.white);
+AppBar adminStoreAppBar(){
+  return AppBar(backgroundColor: Colors.white,actions: [IconButton(onPressed: () {
+ Get.to(()=>CreateStoryBottomSheet());
+  }, icon: Icon(Icons.add_circle))],);
+
+}

@@ -19,7 +19,6 @@ class BrandController extends GetxController{
   void onInit() {
     // TODO: implement onInit
     super.onInit();
-    setToken();
     fetchBrand();
   }
   TextEditingController nameController = TextEditingController();
@@ -29,17 +28,13 @@ class BrandController extends GetxController{
 
   UploadController uploadController = Get.put(UploadController());
 
-  String? token = '';
-
-  setToken() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    token = preferences.getString('token');
-  }
 
   bool notFound = false;
   List<BrandEntity> brands = [];
 
   Future fetchBrand() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+   String? token = preferences.getString('token');
     brands.clear();
     final response = await dio.get(
       '$baseUrl/brands',
@@ -85,7 +80,6 @@ class BrandController extends GetxController{
           },
         ),
       );
-      print(response.data);
       if (response.statusCode == 200) {
         descController.clear();
         nameController.clear();
@@ -103,7 +97,10 @@ class BrandController extends GetxController{
   }
 
 
-  Future<void> deleteBrand({id, index}) async {
+  Future<void> deleteBrand({required id,required index}) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+   String? token = preferences.getString('token');
+
     try {
       final response = await dio.delete(
         '$baseUrl/admin/brands/$id',
@@ -114,7 +111,7 @@ class BrandController extends GetxController{
           },
         ),
       );
-
+      print(response.statusCode);
       if (response.statusCode == 200) {
         brands.removeAt(index);
         update();
@@ -143,7 +140,7 @@ class BrandController extends GetxController{
 
   Future<void> createBrand() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    var t = preferences.getString('token');
+    String? t = preferences.getString('token');
     try {
       if (nameController.text.isEmpty || uploadController.selectedImage.isEmpty || t == ''|| descController.text.isEmpty) {
         showSnackBar(

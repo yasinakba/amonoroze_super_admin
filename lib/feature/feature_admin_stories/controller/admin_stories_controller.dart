@@ -1,8 +1,10 @@
 import 'package:amonoroze_panel_admin/app_config/app_routes/name_routes.dart';
 import 'package:amonoroze_panel_admin/app_config/constant/contstant.dart';
 import 'package:amonoroze_panel_admin/feature/feature_admin_stories/entity/story_enitity.dart';
+import 'package:amonoroze_panel_admin/feature/feature_category/controller/category_controller.dart';
 import 'package:amonoroze_panel_admin/feature/feature_upload/upload_controller.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,7 +56,7 @@ class AdminStoriesController extends GetxController {
       final response = await dio.get(
         '$baseUrl/admin/stories?page=$pageKey?limit=10',
         options: Options(headers: {
-          'Authorization': 'Bearer $token',
+          'Authorization': 'Bearer $t',
           'accept': 'application/json',
         }),
       );
@@ -105,16 +107,57 @@ class AdminStoriesController extends GetxController {
   /// -----------------------------
   /// CREATE STORY
   /// -----------------------------
-  Future<void> createStories({required Map<String, dynamic> data}) async {
+  CategoryController categoryController = Get.put(CategoryController());
+  // ... existing code ...
+
+  // --- NEW: Form Controllers ---
+  final TextEditingController storyTitleController = TextEditingController();
+  final TextEditingController durationController = TextEditingController(text: "30");
+  final TextEditingController productIdController = TextEditingController();
+  final TextEditingController orderController = TextEditingController(text: "0");
+
+  // Link Type Options
+  final List<String> linkTypes = ["none", "product", "category", "external"];
+  String selectedLinkType = "none";
+
+  /// -----------------------------
+  /// UPDATE: CREATE STORY
+  /// -----------------------------
+  Future<void> createStories() async {
     final prefs = await SharedPreferences.getInstance();
     String? t = prefs.getString('token');
-    if(t==''){
+
+    if (t == '' || t == null) {
       Get.toNamed(NamedRoute.loginScreen);
+      return;
     }
+
+    // Validation
+    if (uploadController.imageURL.isEmpty) {
+      showSnackBar(message: 'Please upload an image', status: 'Error', isSucceed: false);
+      return;
+    }
+    if (categoryController.selectedCategory.id == '') {
+      showSnackBar(message: 'Please select a category', status: 'Error', isSucceed: false);
+      return;
+    }
+
     try {
       final response = await dio.post(
         '$baseUrl/admin/stories',
-        data: data,
+        data: {
+          "images": [
+            {
+              "category_id": categoryController.selectedCategory.id,
+              "duration": int.tryParse(durationController.text) ?? 30,
+              "image_url": uploadController.imageURL, // From UploadController
+              "link_type": selectedLinkType,
+              "master_product_id": productIdController.text,
+              "order": int.tryParse(orderController.text) ?? 0
+            }
+          ],
+          "title": storyTitleController.text // The main story title
+        },
         options: Options(
           headers: {
             'Authorization': 'Bearer $t',
@@ -124,10 +167,17 @@ class AdminStoriesController extends GetxController {
         ),
       );
 
-      if (response.statusCode == 200) {
-        final list = response.data['data'] as List;
-        stories = list.map((item) => StoryEntity.fromJson(item)).toList();
-        update();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Refresh list
+        fetchStories(1);
+        Get.back(); // Close bottom sheet
+        showSnackBar(message: 'Story created successfully', status: 'Success', isSucceed: true);
+
+        // Clear fields
+        storyTitleController.clear();
+        uploadController.imageURL = '';
+        uploadController.selectedImage = ''; // Reset upload controller state
+        uploadController.update();
       }
     } catch (e) {
       showSnackBar(message: 'Failed to create story', status: 'Error', isSucceed: false);
@@ -164,3 +214,4 @@ class AdminStoriesController extends GetxController {
     }
   }
 }
+

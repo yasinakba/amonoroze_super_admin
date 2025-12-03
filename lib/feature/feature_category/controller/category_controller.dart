@@ -53,7 +53,7 @@ class CategoryController extends GetxController{
     }
   }
 
-  Future<void> editParentCategory({id}) async {
+  Future<void> editParentCategory({required id}) async {
     // Validation
     if (titleController.text.isEmpty) {
       showSnackBar(message: 'Please fill all requirements', status: 'Error', isSucceed: false);
@@ -206,6 +206,7 @@ class CategoryController extends GetxController{
 
       // --- Success ---
       if (response.statusCode == 200 || response.statusCode == 201) {
+        titleController.clear();
         Get.back();
         fetchCategory();
         showSnackBar(

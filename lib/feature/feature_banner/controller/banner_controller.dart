@@ -47,7 +47,7 @@ class BannerController extends GetxController {
   LocationController locationController = Get.put(LocationController());
   TextEditingController routeController = TextEditingController();
 
-  Future fetchBanners(level) async {
+  Future fetchBanners({required level}) async {
     try {
       if (level == '' || token == '') {
         await setToken();
@@ -60,7 +60,7 @@ class BannerController extends GetxController {
       }
       banners.clear();
       final response = await dio.get(
-        '$baseUrl/banners?level=$level',
+        '$baseUrl/banners?level=${int.tryParse(level)}',
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -71,8 +71,8 @@ class BannerController extends GetxController {
       if (response.statusCode == 200) {
         List<dynamic> list = response.data['data'];
         banners.addAll(list.map((item) => BannerEntity.fromJson(item)));
-        notFound = banners.isEmpty;
         update();
+        notFound = banners.isEmpty;
       } else {
         showSnackBar(
           message: 'Failed to fetch banners. Status: ${response.statusCode}',
@@ -92,7 +92,7 @@ class BannerController extends GetxController {
 
   Future<void> editBanner(id) async {
     // Validation
-    if (titleController.text.isEmpty || editingLevelController.text.isEmpty||routeController.text.isEmpty) {
+    if (titleController.text.isEmpty || editingLevelController.text.isEmpty) {
       showSnackBar(
         message: 'Please fill all requirements',
         status: 'Error',
@@ -101,13 +101,14 @@ class BannerController extends GetxController {
       return;
     }
     try {
+      print(uploadController.selectedImage);
       // Build form
       Map<String, dynamic> formData = {
         "destination_id": locationController.selectedCity.id,
         "destination_screen": routeController.text,
-        "Level": editingLevelController.text,
-        "Title": titleController.text,
-        "Image": uploadController.selectedImage,
+        'level': int.tryParse(editingLevelController.text),
+        'title': titleController.text,
+        'image': uploadController.selectedImage,
       };
 
       final response = await dio.put(
@@ -126,9 +127,9 @@ class BannerController extends GetxController {
       if (response.statusCode == 200) {
         editingLevelController.clear();
         titleController.clear();
-        fetchBanners(levelController.text);
+        fetchBanners(level:levelController.text);
         Get.back();
-
+        update();
         showSnackBar(message: "Banner updated successfully", status: "Success", isSucceed: true,);
         return;
       }
@@ -148,18 +149,23 @@ class BannerController extends GetxController {
     }
   }
 
-  Future<void> deleteBanner({id, context, index}) async {
+  Future<void> deleteBanner({required id,required context,required index}) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? t =preferences.getString('token');
+    if(t == ''){
+      Get.toNamed(NamedRoute.loginScreen);
+    }
     try {
       final response = await dio.delete(
         '$baseUrl/admin/banners/$id',
         options: Options(
           headers: {
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $t',
             'accept': 'application/json',
           },
         ),
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 204) {
         banners.removeAt(index);
         update();
         showSnackBar(
@@ -175,6 +181,7 @@ class BannerController extends GetxController {
         );
       }
     } catch (e) {
+      print(e);
       showSnackBar(
         message: 'Error deleting banner: $e',
         status: 'Error',
@@ -201,12 +208,13 @@ class BannerController extends GetxController {
       return; // Stop execution
     }
     try {
+      print(locationController.selectedCity.id);
       final response = await dio.post(
         "$baseUrl/admin/banners",
         data: {
           'image': uploadController.selectedImage,
-          'level': levelController.text,
-          "title": titleController.text,
+          'level': int.tryParse(levelController.text) ,
+          'title': titleController.text,
           'destination_id': locationController.selectedCity.id,
           'destination_screen': routeController.text,
         },
@@ -219,9 +227,10 @@ class BannerController extends GetxController {
         ),
       );
 
-      if (response.statusCode == 200) {
-        showSnackBar(message: 'Succeed', status: 'Success', isSucceed: true);
+      if (response.statusCode == 201) {
+        fetchBanners(level:levelController.text);
         Get.back();
+        showSnackBar(message: 'Succeed', status: 'Success', isSucceed: true);
       } else {
         showSnackBar(
           message: 'Failed to create banner. Status: ${response.data}',
@@ -230,6 +239,7 @@ class BannerController extends GetxController {
         );
       }
     } catch (e) {
+      print(e);
       showSnackBar(
         message: 'Error creating banner: $e',
         status: 'Error',
@@ -292,11 +302,9 @@ class BannerController extends GetxController {
 
   Future<Widget> editBottomSheet({id, context}) async {
     return await showModalBottomSheet(
-      scrollControlDisabledMaxHeightRatio: 400.h,
-      constraints: BoxConstraints(minHeight: 690.h),
       builder: (BuildContext context) {
         return FractionallySizedBox(
-          heightFactor: 2,
+          heightFactor: 1,
           child: Column(
             children: [
               CircleAvatarGlobal(),
@@ -314,14 +322,6 @@ class BannerController extends GetxController {
                 type: TextInputType.text,
                 controller: titleController,
                 hint: 'Title',
-                icon: null,
-                filteringTextInputFormatter:
-                    FilteringTextInputFormatter.singleLineFormatter,
-              ),
-              TextFiledGlobal(
-                type: TextInputType.text,
-                controller: routeController,
-                hint: 'Route',
                 icon: null,
                 filteringTextInputFormatter:
                     FilteringTextInputFormatter.singleLineFormatter,

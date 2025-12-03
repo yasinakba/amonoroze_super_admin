@@ -22,7 +22,7 @@ class BannerScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
-                child:controller.notFound? ListView.builder(
+                child: ListView.builder(
                   itemCount: controller.banners.length,
                   itemBuilder: (context, index) {
                     BannerEntity banner = controller.banners[index];
@@ -74,28 +74,26 @@ class BannerScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            Container(
-                              child: Row(
-                                children: [
-                                  Spacer(),
-                                  Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
-                                    controller.titleController.text = banner.title??'';
-                                    controller.editingLevelController.text = banner.level.toString();
-                                    controller.uploadController.imageName = banner.image??'';
-                                    controller.editBottomSheet(id:banner.id,context: context);
-                                  }, icon: Icon(Icons.edit,color: Colors.green,)),),
-                                  Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
-                                    showCustomDialog(context: context,onYesPressed: () => controller.deleteBanner(id: banner.id,context: context), text: 'Do you want delete', objectName: banner.title??'');
-                                  }, icon: Icon(Icons.delete,color: Colors.pink,)),),
-                                ],
-                              ),
+                            Row(
+                              children: [
+                                Spacer(),
+                                Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
+                                  controller.titleController.text = banner.title??'';
+                                  controller.editingLevelController.text = banner.level.toString();
+                                  controller.uploadController.imageName = banner.image??'';
+                                  controller.editBottomSheet(id:banner.id,context: context);
+                                }, icon: Icon(Icons.edit,color: Colors.green,)),),
+                                Padding(padding: EdgeInsets.all(12),child: IconButton(onPressed: () {
+                                  showCustomDialog(context: context,onYesPressed: () => controller.deleteBanner(id: banner.id,context: context,index: index), text: 'Do you want delete', objectName: banner.title??'');
+                                }, icon: Icon(Icons.delete,color: Colors.pink,)),),
+                              ],
                             ),
                           ],
                         ),
                       ],
                     );
                   },
-                ):Center(child: Text(textAlign: TextAlign.center,'NotFound',style: styleText,)),
+                )
               ),
             ],
           );
@@ -124,7 +122,7 @@ AppBar bannerAppBar(context) {
             ),
             ButtonGlobal(
               onTap: () =>
-                  controller.fetchBanners(controller.levelController.text),
+                  controller.fetchBanners(level:controller.levelController.text),
               title: 'Get banners',
             ),
             Spacer(),

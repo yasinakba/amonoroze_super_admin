@@ -21,6 +21,7 @@ class UploadController extends GetxController {
   Uint8List? webVideoBytes;
 
   String imageName = '';
+  String imageURL = '';
   String? webImageUrl;
   String? webVideoUrl;
   final String uploadImageUrl = "$baseUrl/admin/upload-image";
@@ -38,7 +39,6 @@ class UploadController extends GetxController {
 
     pickedFile = file;
 
-    // --- 1. Handle Web Preview & Bytes ---
     if (kIsWeb) {
       final bytes = await file.readAsBytes();
       webImageBytes = bytes;
@@ -93,6 +93,7 @@ class UploadController extends GetxController {
         var responseBody = await response.stream.bytesToString();
         var data = jsonDecode(responseBody);
         selectedImage = data['object_name'];
+        imageURL = data['url'];
         update();
       } else {
         showSnackBar(
@@ -120,14 +121,7 @@ class UploadController extends GetxController {
     // 1. Pick Video
     final file = await picker.pickVideo(source: ImageSource.gallery);
     if (file == null) return;
-      int sizeInBytes = await file.length();
-    if (sizeInBytes > 20) {
-      showSnackBar(
-        message: "File too large! Max allowed is 2MB.",
-        status: "Error", isSucceed: false,
-      );
-      return;
-    }
+    ///  int sizeInBytes = await file.length();
     videoPicked = file;
     final extension = file.name
         .split('.')

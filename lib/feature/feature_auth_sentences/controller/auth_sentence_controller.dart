@@ -183,16 +183,11 @@ class AuthSentenceController extends GetxController {
           },
         ),
       );
-
+      print(response.statusCode);
       // --- Success ---
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        fetchAuthSentences();
-        showSnackBar(
-          message: "Brand created successfully",
-          status: "Success",
-          isSucceed: true,
-        );
+      if (response.statusCode == 201) {
         Get.back();
+        fetchAuthSentences();
       } else {
         showSnackBar(
           status: "Error",

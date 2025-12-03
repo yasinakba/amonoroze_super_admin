@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 const String baseUrl  = "http://amonoroz.com/api/v1";
 const String baseImageUrl  = "http://amonoroz.com/api/v1/stream-image";
+const String baseVideoUrl  = "http://amonoroz.com/api/v1/stream-image";
 void showSnackBar({required String message,required String status,required bool isSucceed}){
   Get.snackbar(colorText: Colors.white,status, message,snackStyle: SnackStyle.FLOATING,backgroundColor: isSucceed?Colors.greenAccent.shade700 :Colors.redAccent.shade200,snackPosition: SnackPosition.BOTTOM,);
 }

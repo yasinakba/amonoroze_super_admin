@@ -45,7 +45,7 @@ class HomeScreen extends StatelessWidget {
                   icon: Icons.more_horiz_outlined, appBar: specificationAppBar(context)),
               controller.listTile(widget: AdminStoriesScreeen(),
                   title: 'AdminStories',
-                  icon: Icons.storefront_outlined, appBar: adminStoreAppBar),
+                  icon: Icons.storefront_outlined, appBar: adminStoreAppBar()),
               controller.listTile(widget: AuthSentenceScreen(),
                   title: 'Sentences',
                   icon: Icons.text_decrease, appBar: authSentenceAppBar(context)),
